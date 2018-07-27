@@ -1,36 +1,16 @@
 package game.Typing;
 
 import game.Typing.validation.AlternativesParser;
-import game.Typing.validation.Validator;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.security.acl.LastOwnerException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Locale;
 
-import android.app.ActionBar;
-import android.app.Activity;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.DialogInterface.OnDismissListener;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Vibrator;
-import android.provider.Settings;
-import android.speech.tts.TextToSpeech;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -40,13 +20,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 
 
@@ -67,7 +45,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 	AlternativesParser alt ;
 	ProgressDialog prgUserData;
 	Vibrator myVib;
-	TextToSpeech tts3;
+	//TextToSpeech tts3;
 	//varaiables used for edit distance
 	DamerauLevenshteinAlgorithm editDistance = new DamerauLevenshteinAlgorithm(1,1,1,1);
 	File dir, file;
@@ -93,6 +71,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 	Rect displayRectangle;
 	public static CustomKeyboard mCustomKeyboard;
 	int f[]=new int[2];
+	String TAG = "production";
 
 	/**
 	 * Touch Event Used for detecting
@@ -180,7 +159,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		return false;
 	}
 	//Text to Speeches intialisation
-	TextToSpeech.OnInitListener onInit = new TextToSpeech.OnInitListener() {
+	/*TextToSpeech.OnInitListener onInit = new TextToSpeech.OnInitListener() {
 		@Override
 		public void onInit(int status) {
 			if (status == TextToSpeech.SUCCESS) {
@@ -188,36 +167,41 @@ public class FTU extends FragmentActivity implements OnClickListener{
 				int result = tts3.setLanguage(loc);
 				if (result == TextToSpeech.LANG_MISSING_DATA
 						|| result == TextToSpeech.LANG_NOT_SUPPORTED) {
-					Log.e("TTS", "This Language is not supported");
+					Log.d(TAG, "0:This Language is not supported");
+					Toast.makeText(getApplicationContext(), "Your default text to speech engine does not support Hindi. Please download Hindi locale for current TTS or switch to a text to speech engine that supports Hindi locale.",Toast.LENGTH_LONG).show();
+
 				} else {
 
 //                    speakOut(keyCodelabel);
+					Log.d(TAG, "0:This Language is supported");
 				}
 
 			} else {
-				Log.e("TTS", "Initilization Failed!");
+				Log.d(TAG, "0:Initilization Failed!");
 			}
 		}
-	};
+	};*/
+
 	public void speakOut_training(String keyCodelabel) {
 //        if (!isAccessibilitySettingsOn(mHostActivity.getApplicationContext())) {
-		tts3.setPitch(1);
-		tts3.speak(keyCodelabel, TextToSpeech.QUEUE_FLUSH, null);
+		/*tts3.setPitch(1);
+		tts3.speak(keyCodelabel, TextToSpeech.QUEUE_FLUSH, null);*/
 //        }
 	}
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		tts3 = new TextToSpeech(this, onInit);
+		//tts3 = new TextToSpeech(this, onInit);
 		setContentView(R.layout.activity_ftu);
 		myVib = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 		//Log.d("logger","##onCreate()");
-		mCustomKeyboard= new CustomKeyboard(this, null,R.id.keyboardview, R.xml.hexkbd);
+		mCustomKeyboard= new CustomKeyboard(this, null,R.id.keyboardview, R.xml.hexkbd_orig);
 		mCustomKeyboard.registerEditText(R.id.editText1);
 		this.addContentView(mCustomKeyboard, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
+		//tts3 = new TextToSpeech(this, onInit);
 
 
-		FileOperations.write("##onCreate()  in FTU");
+		//FileOperations.write("##onCreate()  in FTU");
 	}
 
 	public void onBackPressed() {
@@ -226,7 +210,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		//Log.d("logger","##onBackPressed()");
 		mCustomKeyboard.hideCustomKeyboard();
 		nexttext.setEnabled(true);
-		FileOperations.write("##onBackPressed()  in FTU");
+		//FileOperations.write("##onBackPressed()  in FTU");
 	}	
 
 	@Override
@@ -234,7 +218,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		// TODO Auto-generated method stub
 		super.onRestart();
 		//Log.d("logger","##onRestart()");
-		FileOperations.write("##onRestart() in FTU");
+		//FileOperations.write("##onRestart() in FTU");
 	}
 
 	@Override
@@ -242,7 +226,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		// TODO Auto-generated method stub
 		super.onResume();
 		//Log.d("logger","##onResume()");
-		FileOperations.write("##onResume() in FTU");
+		//FileOperations.write("##onResume() in FTU");
 	}
 
 	@Override
@@ -250,7 +234,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		// TODO Auto-generated method stub
 		super.onPause();
 		//Log.d("logger","##onPause()");
-		FileOperations.write("##onPause() in FTU");
+		//FileOperations.write("##onPause() in FTU");
 	}
 
 	@Override
@@ -258,7 +242,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		// TODO Auto-generated method stub
 		super.onStop();
 		//Log.d("logger","##onStop()");
-		FileOperations.write("##onStop() in FTU");
+		//FileOperations.write("##onStop() in FTU");
 	}
 
 	@Override
@@ -266,7 +250,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		// TODO Auto-generated method stub
 		super.onDestroy();
 		//Log.d("logger","##onDestroy()");
-		FileOperations.write("##onDestroy() in FTU");
+		//FileOperations.write("##onDestroy() in FTU");
 	}
 
 	/*
@@ -284,7 +268,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		// TODO Auto-generated method stub
 		super.onStart();
 		//Log.d("logger","##onStart()");
-		FileOperations.write("##onStart() in FTU");
+		//FileOperations.write("##onStart() in FTU");
 		
 		prgUserData = new ProgressDialog(this);
  	    prgUserData.setMessage(getString(R.string.please_wait_uploading));
@@ -316,22 +300,22 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		rl = (RelativeLayout) findViewById(R.id.ftu);
 		secondAttempt = (TextView) findViewById(R.id.secondAttempt);
 
-		DB = new Database(this);
+		/*DB = new Database(this);
 		sDB = new SessionDetailsTable(this);
-		alt = new AlternativesParser(this);
+		alt = new AlternativesParser(this);*/
 		
 		displayRectangle = new Rect();
         Window window = this.getWindow();
         window.getDecorView().getWindowVisibleDisplayFrame(displayRectangle);
 
-		Intent it = getIntent();
+		/*Intent it = getIntent();
 		Bundle b= it.getExtras();
 		userId = b.getInt("userid");
 		session_type = b.getInt("sessiontype");
 		kbname = b.getString("kbname");
 		imename = b.getString("imename");
 		//continueFrom = b.getInt("continueFrom");
-		continueFrom = sDB.getLastSuccessfulPhrase(userId, session_type);
+		continueFrom = sDB.getLastSuccessfulPhrase(userId, session_type);*/
 
 		totalcpm = 0;
 
@@ -340,12 +324,12 @@ public class FTU extends FragmentActivity implements OnClickListener{
 			public void onTextChanged(CharSequence s, int start, int before,
 					int count) {
 				// TODO Auto-generated method stub
-				word_typed.setText(typing.getText().toString());
+				//word_typed.setText(typing.getText().toString());
 				if(session_start_time == 0){
-					session_start_time = System.currentTimeMillis();
+					/*session_start_time = System.currentTimeMillis();
 					session_end_time = System.currentTimeMillis();
 					sDB.updateSessionEntry(userId, session_type, 0, session_start_time, session_end_time, SessionDetailsTable.SESSION_STATUS_STARTED);
-					FileOperations.write("SessionTable updated: uid-"+ userId + " , session type-" + session_type+ " , session rating" + 0+ " , session start time-" + session_start_time+ " , session end time-" + session_end_time+ " , session status -" + SessionDetailsTable.SESSION_STATUS_STARTED);
+					FileOperations.write("SessionTable updated: uid-"+ userId + " , session type-" + session_type+ " , session rating" + 0+ " , session start time-" + session_start_time+ " , session end time-" + session_end_time+ " , session status -" + SessionDetailsTable.SESSION_STATUS_STARTED);*/
 				}
 
 				if(firstchartime==0){		
@@ -367,13 +351,13 @@ public class FTU extends FragmentActivity implements OnClickListener{
 //						return;
 //					}
 					//this will remain constant;
-					firstchartime = System.currentTimeMillis();
+					/*firstchartime = System.currentTimeMillis();
 					speed.setFirstCharTime(firstchartime);
-					speed.setAvgWordLength(ApplicationConstants.MARATHI_AVG_WORD_LEN);
+					speed.setAvgWordLength(ApplicationConstants.MARATHI_AVG_WORD_LEN);*/
 
 				}
 
-				if(oldText.compareToIgnoreCase(String.valueOf(s))!=0){
+				/*if(oldText.compareToIgnoreCase(String.valueOf(s))!=0){
 					//Log.d("detailedLogger", String.valueOf(s) + "starting from:" + start + ", prev length:" + before + ", replaced chars: "+count);
 
 
@@ -403,7 +387,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 					}
 
 					oldText = String.valueOf(s);
-				}
+				}*/
 
 				//this is the current character time
 				currentTime = System.currentTimeMillis();
@@ -437,7 +421,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 
 		//if (session_type.equals("-1")) {
 		//i = continueFrom;
-		Log.d("kbz","continue from: "+continueFrom);
+		//Log.d("kbz","continue from: "+continueFrom);
 		j = 0;
 		attemptNo=0;
 		/*		correctCount = 0;
@@ -446,7 +430,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 
 		//word_phrase = resources.getStringArray(R.array.FTU_words);
 
-		word_phrase = sDB.getFTUPhrases();
+		//word_phrase = sDB.getFTUPhrases();
 		if(word_phrase ==null){
 
 			FileOperations.write("Illegal state:Phrase list for FTU empty.");			
@@ -455,7 +439,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 
 		}else if(continueFrom > word_phrase.length){
 
-			continueFrom = 1;
+			/*continueFrom = 1;
 			//sessionId = 0;
 			FileOperations.write("Illegal state:continueFrom exceeds number of phrases.");
 			sDB.updateSessionEntry(userId, session_type, 0, 0, 0, SessionDetailsTable.SESSION_STATUS_DONE);
@@ -463,14 +447,14 @@ public class FTU extends FragmentActivity implements OnClickListener{
 
 			//if(sDB.ftuDone(userId) == 1){
 			finish();
-			return;
+			return;*/
 			//}
 			//finish();			
 
 		}
 
 		//i = continueFrom - 1;		
-		len = word_phrase.length;
+		/*len = word_phrase.length;
 		training.setText(word_phrase[continueFrom -1][0].trim());
 		typed = typing.getText().toString().trim();
 
@@ -490,7 +474,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 			//rating = 0;
 		}else{
 			Toast.makeText(this, "Std task rating for userid:" + userId + " is "+rating, Toast.LENGTH_SHORT).show();
-		}
+		}*/
 	}
 
 	@Override
@@ -505,7 +489,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		}*/
 		int index = continueFrom -1;
 		//nexttext.setEnabled(false);
-		
+
 		session_end_time = System.currentTimeMillis();
 		if (firstchartime ==0) {
 			Toast.makeText(this, "Warning:First character typed timestamp is 0", Toast.LENGTH_LONG).show();
@@ -517,7 +501,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		/*if(typedText.isEmpty() || typedText.length() ==0){
 			nexttext.setEnabled(false);
 			return;
-		}*/		
+		}*/
 
 		attemptNo++;
 
@@ -536,15 +520,15 @@ public class FTU extends FragmentActivity implements OnClickListener{
 				String[] tmp = word_phrase[index][1].split(",");
 
 				for(int i=0 ; i<tmp.length ; i++){
-					
+
 					Log.d("logger", "Alt chk:"+tmp[i].trim());
-					
+
 					if(tmp[i].trim().equalsIgnoreCase(typedText)== true){
-						
+
 						altMatch = true;
 						Log.d("logger", "Alt match found");
 						break;
-						
+
 					}else
 						Log.d("logger", "Nope not a match");
 
@@ -561,7 +545,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 			if(attemptNo<2){
 
 				int phraseno = (index+1);
-				//float cpm = typing.getText().toString().length() / ( (float)(currentTime-firstchartime) /(float)60000); 
+				//float cpm = typing.getText().toString().length() / ( (float)(currentTime-firstchartime) /(float)60000);
 
 
 				//repeated++;  //moved up
@@ -607,7 +591,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 				//totalcpm =( (currentTime-firstchartime)/ + totalcpm )/2;
 				//totalEDistance += editdis;
 				//restart counter
-			
+
 
 				typing.setText("");
 				log = "";
@@ -616,7 +600,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 				nexttext.setEnabled(false);
 				return;
 
-			} 
+			}
 			else{
 				//tbd
 			}
@@ -630,7 +614,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		speed.setWordCount(typedText.split(" ").length);
 		//speed.setPhraseShownTS(sDB.getPhraseShownTS(userId, sessionId, session_type, index+1, 1));
 
-		double cpm= speed.getCPM();	
+		double cpm= speed.getCPM();
 		//double cpm2 = speed.getCPM2();
 		//double timetaken=speed.getTimeTaken();
 
@@ -639,7 +623,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 			editdis = 0;
 		else
 			editdis = editDistance.execute(alt.replaceAlternatives(alt.replaceAlternatives(presentedText)), alt.replaceAlternatives(alt.replaceAlternatives(typedText)));
-		
+
 		//Toast.makeText(getApplicationContext(), "Edist: "+editdis, Toast.LENGTH_LONG).show();
 		//latest:this.setTitle(String.format("%.0f", cpm) +" | "+editdis+" | "+ Validator.getEDToStars( editdis,presentedText.length()) +" | "+ typedText.length() + " | "+ speed.getTimeTaken());
 		//AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -649,18 +633,18 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		b.putInt("wordlength", presentedText.length());
 		b.putDouble("cpm",cpm);
 		//b.putDouble("cpm2",cpm2);
-	
+
 		b.putString("presentedtext",alt.replaceAlternatives(alt.replaceAlternatives(presentedText)));
 		b.putString("typedtext",alt.replaceAlternatives(alt.replaceAlternatives(typedText)));
 		b.putInt("width", displayRectangle.width());
 		b.putInt("height", displayRectangle.height());
-		
+
 		gamificationDialogFragment gdf =new gamificationDialogFragment();
 		gdf.setArguments(b);
 		gdf.c = getApplicationContext();
 
 		gdf.show(getSupportFragmentManager(), "feedback");
-		
+
 
 		/*if(attemptNo >1){//this is second attempt, add another entry
 			int xmlId = sDB.getPhraseXMLID(userId, session_type, phraseno);

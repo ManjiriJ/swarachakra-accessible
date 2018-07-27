@@ -4,7 +4,7 @@
     android:layout_height="match_parent" 
 	>
 
-       <TextView
+       <!--<TextView
            android:id="@+id/textView1"
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
@@ -25,13 +25,14 @@
 		   android:layout_marginTop="10sp"
            android:layout_marginRight="18sp"
            android:text=""
-           android:textSize="@dimen/font_size" />
+           android:textSize="@dimen/font_size" />-->
       
       <EditText
           android:id="@+id/editText1"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
           android:ems="10"
+          android:lines="10"
           android:imeOptions="actionDone"
           android:inputType="text"
           android:paddingLeft="12sp"
@@ -39,7 +40,7 @@
           android:layout_below="@+id/textView1"
           android:layout_alignParentRight="true"
           android:layout_alignParentEnd="true"
-          android:layout_marginTop="115dp">
+          android:layout_marginTop="15dp">
 
           <requestFocus />
       </EditText>
@@ -48,15 +49,17 @@
           android:id="@+id/nextText"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:enabled="false"
+          android:enabled="true"
           style="@style/devanagari"
           android:text="@string/next_word"
           android:textSize="@dimen/font_size"
           android:layout_below="@+id/editText1"
-          android:layout_centerHorizontal="true" />
+          android:layout_alignParentRight="true" />
+
     <android.inputmethodservice.KeyboardView
         android:id="@+id/keyboardview"
-        android:labelTextSize="20dp"
+        android:labelTextSize="22sp"
+        android:keyTextSize="22sp"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -64,16 +67,19 @@
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:visibility="visible"
-        android:keyBackground="@drawable/keyicon"
+        android:keyTextColor="@color/offwhite"
+        android:keyBackground="@color/bluegrey2"
+
         />
+    <!-- android:keyBackground="@drawable/keyicon"        android:keyBackground="@color/darkgrey2"-->
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="@dimen/typed_font_size"
+        android:text="CPM:"
+        android:textSize="16sp"
         android:id="@+id/textView"
-        android:layout_alignBottom="@+id/textView3"
-        android:layout_toRightOf="@+id/nextText"
-        android:layout_toEndOf="@+id/nextText" />
+        android:layout_below="@+id/nextText"
+        android:layout_alignParentRight="true"
+        />
 </RelativeLayout>

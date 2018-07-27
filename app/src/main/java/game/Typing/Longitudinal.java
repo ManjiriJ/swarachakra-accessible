@@ -1,29 +1,18 @@
 package game.Typing;
 
 import game.Typing.validation.AlternativesParser;
-import game.Typing.validation.Validator;
 
-import java.io.File;
-import java.security.acl.LastOwnerException;
 import java.util.Locale;
 
-import android.app.ActionBar;
-import android.app.Activity;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.DialogInterface.OnDismissListener;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -33,10 +22,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -196,7 +183,7 @@ public class Longitudinal extends FragmentActivity implements OnClickListener {
 		tts3 = new TextToSpeech(this, onInit);
 		setContentView(R.layout.activity_longitudinal);
 		myVib = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
-		mCustomKeyboard= new CustomKeyboard(this, null,R.id.keyboardview, R.xml.hexkbd);
+		mCustomKeyboard= new CustomKeyboard(this, null,R.id.keyboardview, R.xml.hexkbd_orig);
 		mCustomKeyboard.registerEditText(R.id.editText1);
 		this.addContentView(mCustomKeyboard, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 

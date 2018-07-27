@@ -29,8 +29,8 @@ public class SetIpAndId extends Activity implements OnClickListener{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		
 		if (prefs.getBoolean("first_time", false)) {
-			
-			Intent intenta = new Intent("game.MarathiUT.SCHOOLSELECTION");
+
+			Intent intenta = new Intent("game.MarathiUT.KB");
 			intenta.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			startActivity(intenta);
 			
@@ -81,8 +81,8 @@ public class SetIpAndId extends Activity implements OnClickListener{
 		
 		editor.putInt("my_device_id", my_device_id);
 		editor.commit();
-		
-		Intent intent = new Intent("game.MarathiUT.SCHOOLSELECTION");
+
+		Intent intent = new Intent("game.MarathiUT.KB");
 		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		startActivity(intent);
 	}

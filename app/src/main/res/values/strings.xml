@@ -90,7 +90,7 @@
     <!-- "Error in the last word. Please try typing the word again." -->
     <string name="try_again">शब्द चुकला. परत प्रयत्न करा.</string>
     <!-- "Next word." -->
-    <string name="next_word">पुढचा शब्द</string>
+    <string name="next_word">Copy text</string>
 
     <!-- 3. -->
     <!-- Not needed any more. Deleted. -->
