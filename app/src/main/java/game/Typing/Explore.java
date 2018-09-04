@@ -41,7 +41,7 @@ public class Explore extends Activity implements OnClickListener{
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.explore);
-		mCustomKeyboard= new CustomKeyboard(this, null,R.id.keyboardview, R.xml.hexkbd_orig);
+		mCustomKeyboard= new CustomKeyboard(this, null,R.id.keyboardview, R.xml.layout2);
 		mCustomKeyboard.registerEditText(R.id.editText1);
 		this.addContentView(mCustomKeyboard, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 

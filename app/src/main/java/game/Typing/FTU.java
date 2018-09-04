@@ -195,7 +195,7 @@ public class FTU extends FragmentActivity implements OnClickListener{
 		setContentView(R.layout.activity_ftu);
 		myVib = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 		//Log.d("logger","##onCreate()");
-		mCustomKeyboard= new CustomKeyboard(this, null,R.id.keyboardview, R.xml.hexkbd_orig);
+		mCustomKeyboard= new CustomKeyboard(this, null,R.id.keyboardview, R.xml.layout2);
 		mCustomKeyboard.registerEditText(R.id.editText1);
 		this.addContentView(mCustomKeyboard, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
 		//tts3 = new TextToSpeech(this, onInit);

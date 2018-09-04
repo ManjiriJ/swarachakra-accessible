@@ -1,5 +1,3 @@
-
-
 package game.Typing;
 
 import android.annotation.TargetApi;
@@ -64,6 +62,33 @@ public class CustomKeyboard extends View {
     public PopupWindow popUp;
     public int keyCodeClicked;
     public RelativeLayout relativelayout;
+    //400:bkspc, 401:space, 402:enter, 404: shift, 405:left arrow, 406:right arrow, 407:settings, 408: en, mic:409
+    //modal keys: 501/53:rafar, 502/52:trakar, 503/121:nukta, 504 / 51: eyelash
+    final int BACKSPACE = 400;
+    final int SPACE = 401;
+    final int ENTER = 403;
+    final int SHIFT = 404;
+    final int LEFTARROW = 405;
+    final int RIGHTARROW = 406;
+    final int SETTINGS = 407;
+    final int LANGUAGE_EN = 408;
+    final int VOICETYPING = 409;
+
+    final int RAFARCODE = 53;
+    final int RAKARCODE = 52;
+    final int NUKTACODE = 121;
+    final int EYELASHCODE = 51;
+
+    private int arcVibrateDuration = 100;
+
+    public int[][] kbLayoutRafar = {{109,108,48,120,49,BACKSPACE},{1,2,3,4,5,BACKSPACE},{6,7,8,9,10,EYELASHCODE},{11,12,13,14,15,RAKARCODE},{16,17,18,19,20,RAFARCODE},{21,22,23,24,25,NUKTACODE},{26,27,28,29,30,54},{31,32,33,34,35,60},{39,36,37,38,136,44},{SHIFT,LEFTARROW,RIGHTARROW,SETTINGS,LANGUAGE_EN,VOICETYPING},{SHIFT,SPACE,SPACE,SPACE,SPACE,ENTER}};
+    //public int[][] kbLayoutRAFARCODE = {{109,108,48,120,49,BACKSPACE},{1,2,3,4,5,BACKSPACE},{6,7,8,9,10,EYELASHCODE},{11,12,13,14,15,RAKARCODE},{16,17,18,19,20,RAFARCODE},{21,22,23,24,25,NUKTACODE},{26,27,28,29,30,54},{31,32,33,34,35,60},{39,36,37,38,136,44},{SHIFT,VOICETYPING,LEFTARROW,RIGHTARROW,LANGUAGE_EN,SETTINGS},{SHIFT,SPACE,SPACE,SPACE,SPACE,ENTER}};
+
+    public int[][] kbLayout = {{109,108,48,120,49,BACKSPACE},{1,2,3,4,5,BACKSPACE},{6,7,8,9,10,EYELASHCODE},{11,12,13,14,15,RAKARCODE},{16,17,18,19,20,RAFARCODE},{21,22,23,24,25,NUKTACODE},{26,27,28,29,30,SETTINGS},{31,32,33,34,35,LANGUAGE_EN},{39,36,37,38,137,VOICETYPING},{SHIFT,54,60,44,LEFTARROW,RIGHTARROW},{SHIFT,SPACE,SPACE,SPACE,SPACE,ENTER}};
+
+    public int[][] kbLayoutNukta = {{109,108,48,120,49,BACKSPACE},{1,2,3,4,5,BACKSPACE},{6,7,8,9,10,EYELASHCODE},{11,12,13,14,15,RAKARCODE},{16,17,18,19,20,RAFARCODE},{21,22,23,24,25,NUKTACODE},{26,27,28,29,30,54},{31,32,33,34,35,60},{39,36,37,38,136,44},{SHIFT,LANGUAGE_EN,VOICETYPING,LEFTARROW,RIGHTARROW,43},{SHIFT,SETTINGS,SPACE,SPACE,SPACE,ENTER}};
+
+    public int[][] kbLayoutTrakar = {{109,108,48,120,49,BACKSPACE},{1,2,3,4,5,BACKSPACE},{6,7,8,9,10,EYELASHCODE},{11,12,13,14,15,RAKARCODE},{16,17,18,19,20,RAFARCODE},{21,22,23,24,25,NUKTACODE},{26,27,28,29,30,54},{31,32,33,34,35,60},{39,36,37,38,136,44},{SHIFT,LANGUAGE_EN,VOICETYPING,LEFTARROW,RIGHTARROW,43},{SHIFT,SETTINGS,SPACE,SPACE,SPACE,ENTER}};
     //    final GestureDetector gestureDetector = new GestureDetector(new GestureDetector.SimpleOnGestureListener() {
 //        public void onLongPress(MotionEvent e) {
 ////            if(flag[1][0] == 1){
@@ -83,11 +108,12 @@ public class CustomKeyboard extends View {
     //Variables declaration and intialization
     TextView tv1;
     EditText et1;
-    int count_trakar=1,count_nukta=1,count_rafar=1;
+    //int count_trakar=1,count_nukta=1,count_rafar=1;
     //float touchdX=0,touchdY=0,touchdX1=0,touchdY1=0,distance=0,distance1=0;
 
     //int COUNT_DOWN_TIME=1000;
     float touchMovementX, touchMovementY;
+    //boolean touch_flag = false, multi_touch_flag = false, action_down_flag = false, multi_touch = false,tri_touch=false,navigator_flag=false;
     //boolean touch_flag = false, multi_touch_flag = false, action_down_flag = false, multi_touch = false,tri_touch=false,navigator_flag=false;
     float x, y, x1, y1, touchDownX, touchDownY;
     boolean single_touch = false;
@@ -111,8 +137,9 @@ public class CustomKeyboard extends View {
     boolean flag_pointerdown = false;
     EditText et;
     Keyboard.Key k1;
-    boolean flag2[] = new boolean[3];
+    /*boolean flag2[] = new boolean[3];*/
     String TAG = "production";
+    String CHAKRATAG = "chakra";
     /**
      * A link to the KeyboardView that is used to render this CustomKeyboard.
      */
@@ -209,7 +236,7 @@ public class CustomKeyboard extends View {
 //            Log.d("Count",Integer.toString(count));
 
             Log.d("On", "onkey");
-            Log.d(TAG,"On key ");
+            Log.d("Sequence","On key ");
 
             View focusCurrent = mHostActivity.getWindow().getCurrentFocus();
             if (focusCurrent == null || focusCurrent.getClass() != EditText.class) return;
@@ -220,21 +247,30 @@ public class CustomKeyboard extends View {
             int start = edittext.getSelectionStart();
             // Apply the key to the edittext
             if (primaryCode == CodeLeft) {
+
                 Log.d("On", "codeleft");
                 int selectionEnd = edittext.getSelectionEnd();
                 if(selectionEnd != 0) edittext.setSelection(selectionEnd-1);
 //                setContentDescription("leftarrow");
+
             } else if (primaryCode == CodeRight) {
+
                 Log.d("On", "coderight");
                 int selectionEnd = edittext.getSelectionEnd();
                 if(selectionEnd != text.length() )edittext.setSelection(selectionEnd+1);
+
             } else if (primaryCode == CodeAllLeft) {
+
                 Log.d("On", "codeallleft");
                 edittext.setSelection(0);
+
             } else if (primaryCode == CodeAllRight) {
+
                 Log.d("On", "codeallright");
                 edittext.setSelection(edittext.length());
+
             } else if (primaryCode == CodeDelete) {
+
                 String str = edittext.getText().toString();
                 String str1,str2;
                 int pos=0;
@@ -274,21 +310,21 @@ public class CustomKeyboard extends View {
             } else if (primaryCode == (23664)) {
                 //for trakar
                 if (flag_trakar == 0) {
-                    new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.trakar);
+                    new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.layout2);
                     flag_trakar = 1;
                 } else {
-                    new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.modified);
+                    new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.layout2);
                     flag_trakar = 0;
                 }
             } else if (primaryCode == (23665)) {
                 //for rafar
                 Log.d(TAG,"Rafar");
                 if (flag_rafar == 0) {
-                    new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.rafar);
+                    new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.layout2);
                     flag_rafar = 1;
                     flag_rafar = 1;
                 } else {
-                    new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.modified);
+                    new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.layout2);
                     flag_rafar = 0;
                 }
             } else {
@@ -299,8 +335,10 @@ public class CustomKeyboard extends View {
 
         @Override
         public void onPress(int keyCode) {
+
             keyCodeClicked = keyCode;
-           Log.d("production","onpress");
+            Log.d("production","onpress");
+            Log.d("Sequence","On press ");
             //setiing the keycode currently clicked
 //            mt.setKeyCode(keyCode);
 
@@ -345,12 +383,12 @@ public class CustomKeyboard extends View {
 
         @Override
         public void swipeUp() {
-            Log.d(TAG,"On swipe up");
+            Log.d("Sequence","On swipe up");
             if (flag_num == 0) {
 //                new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.numpad);
                 flag_num = 1;
             } else {
-                new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.modified);
+                new CustomKeyboard(mHostActivity, null, R.id.keyboardview, R.xml.layout2);
                 flag_num = 0;
             }
         }
@@ -395,7 +433,7 @@ public class CustomKeyboard extends View {
         mHostActivity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         initView();
         //setting vowel flags to  false
-        for(int i = 0 ;i<3;i++){flag2[i] = false;}
+        /*for(int i = 0 ;i<3;i++){flag2[i] = false;}*/
 
         /*tts = new TextToSpeech(mHostActivity, onInit);
         tts1 = new TextToSpeech(mHostActivity, onInit1);*/
@@ -474,7 +512,7 @@ public class CustomKeyboard extends View {
     @Override
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        Log.d(TAG,"onDraw");
+        Log.d(CHAKRATAG,"onDraw");
 
         if (mTouchlistener.multi_touch == false)
             return;
@@ -486,10 +524,12 @@ public class CustomKeyboard extends View {
         //outer radium 35% of the min dimension
         // draw all pointers
         mOuterRadius = (float) (0.35 * Math.min(width, height));
+        mInnerRadius = (float) (0.30 * mOuterRadius);
+
         final RectF bound = new RectF();
         final RectF boundOut;
 
-        Log.d(TAG, "pointer_down_co_ondraw: (" + touchDownX + "," + touchDownY + ")");
+        Log.d(CHAKRATAG, "pointer_down_co_ondraw: (" + touchDownX + "," + touchDownY + ")");
 
         bound.set(touchDownX - mOuterRadius, touchDownY, touchDownX + mOuterRadius, touchDownY + 2 * mOuterRadius);
 //        boundOut = new RectF(mOuterRadius-3,mOuterRadius-3,(3*mOuterRadius)+3, (3*mOuterRadius)+3);
@@ -497,7 +537,7 @@ public class CustomKeyboard extends View {
 
         //Chakra inner wheel
         Paint mInnerPaint = new Paint();
-        mInnerPaint.setColor(getResources().getColor(R.color.bluegrey));
+        mInnerPaint.setColor(getResources().getColor(R.color.bluegrey2));
         mInnerPaint.setAntiAlias(true);
 
         float centerX = bound.centerX();
@@ -520,10 +560,9 @@ public class CustomKeyboard extends View {
         mArcPaint.setAntiAlias(true);
         mArcPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 
-
         //selected arc
         Paint mArcPrevPaint = new Paint();
-        mArcPrevPaint.setColor(getResources().getColor(R.color.blueswatchlite));//changes
+        mArcPrevPaint.setColor(getResources().getColor(R.color.bluegrey2));//changes
 //        mArcPrevPaint.setColor(Color.BLACK);//changes
         mArcPrevPaint.setAntiAlias(true);
         mArcPrevPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.OVERLAY));
@@ -539,9 +578,10 @@ public class CustomKeyboard extends View {
         transparentPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
 
         //outer circle
-        Log.d(TAG, "Outer circle: I am Executing Pabba!");
+        Log.d(CHAKRATAG, "Outer circle: I am Executing Pabba!");
         canvas.drawCircle(touchDownX, touchDownY + mOuterRadius, mOuterRadius, mArcDividerPaint);
         canvas.drawCircle(touchDownX, touchDownY + mOuterRadius, mOuterRadius, mTransparentPaint);
+
         canvas.drawCircle(touchDownX, touchDownY + mOuterRadius, mInnerRadius, mInnerPaint);//
 //
         Paint arcPaint, arcPaint1;
@@ -586,7 +626,7 @@ public class CustomKeyboard extends View {
                             speakOut(speak_text,PITCH);
                             Log.d(TAG,"Speak: "+speak_text);
 
-                            mTouchlistener.myVib.vibrate(100);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
 
                         }
                     } else if (arc == 1) {
@@ -610,7 +650,7 @@ public class CustomKeyboard extends View {
                             }
                             speakOut(speak_text,PITCH);
                             Log.d(TAG,"Speak: "+speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
 
                         }
                     } else if (arc == 2) {
@@ -632,8 +672,8 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text);
-                            Log.d(TAG,"Speak: "+speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            Log.d(CHAKRATAG,"Speak: "+speak_text);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
                     } else if (arc == 3) {
                         if (mTouchlistener.flag1[arc] == 0) {
@@ -654,8 +694,8 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text,PITCH);
-                            Log.d(TAG,"Speak: "+speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            Log.d(CHAKRATAG,"Speak: "+speak_text);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
 
                     } else if (arc == 4) {
@@ -677,8 +717,8 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text);
-                            Log.d(TAG,"Speak: "+speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            Log.d(CHAKRATAG,"Speak: "+speak_text);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
                     } else if (arc == 5) {
                         if (mTouchlistener.flag1[arc] == 0) {
@@ -699,7 +739,7 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text,PITCH);
-                            mTouchlistener.myVib.vibrate(100);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
                     } else if (arc == 6) {
                         if (mTouchlistener.flag1[arc] == 0) {
@@ -720,7 +760,7 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
                     } else if (arc == 7) {
                         if (mTouchlistener.flag1[arc] == 0) {
@@ -741,8 +781,8 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text,PITCH);
-                            Log.d(TAG,"Speak: "+speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            Log.d(CHAKRATAG,"Speak: "+speak_text);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
                     } else if (arc == 8) {
                         if (mTouchlistener.flag1[arc] == 0) {
@@ -763,8 +803,8 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text);
-                            Log.d(TAG,"Speak: "+speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            Log.d(CHAKRATAG,"Speak: "+speak_text);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
                     } else if (arc == 9) {
                         if (mTouchlistener.flag1[arc] == 0) {
@@ -785,8 +825,8 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text,PITCH);
-                            Log.d(TAG,"Speak: "+speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            Log.d(CHAKRATAG,"Speak: "+speak_text);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
                     } else if (arc == 0) {
                         if (mTouchlistener.flag1[arc] == 0) {
@@ -807,8 +847,8 @@ public class CustomKeyboard extends View {
                                 }
                             }
                             speakOut(speak_text);
-                            Log.d(TAG,"Speak: "+speak_text);
-                            mTouchlistener.myVib.vibrate(100);
+                            Log.d(CHAKRATAG,"Speak: "+speak_text);
+                            mTouchlistener.myVib.vibrate(arcVibrateDuration);
                         }
                     }
 
@@ -845,24 +885,26 @@ public class CustomKeyboard extends View {
         }else{
             str = keyCodelabel + vowels[region];
         }
-        Log.d("String", Integer.toString(keyCode));
+        //Log.d("String", Integer.toString(keyCode));
         return str;
     }
 
     private void drawLetters(Canvas canvas) {
         float offsetY = 0;
+        //int textSize = 50;
+        float textSize = (float) (0.15*mOuterRadius);
         //textBounds = new Rect();
         Rect textBounds = new Rect();
-        Paint mInnerTextPaint = new Paint();
-        mInnerTextPaint.setColor(Color.BLACK);
-        mInnerTextPaint.setColor(getResources().getColor(R.color.offwhite));
-        mInnerTextPaint.setAntiAlias(true);
-        mInnerTextPaint.setTextAlign(Paint.Align.CENTER);
+        Paint mSelectedArcTextPaint = new Paint();
+        //mInnerTextPaint.setColor(Color.BLACK);
+        mSelectedArcTextPaint.setColor(getResources().getColor(R.color.white));
+        mSelectedArcTextPaint.setAntiAlias(true);
+        mSelectedArcTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        mInnerTextPaint.getTextBounds(getText(), 0, getText().length(), textBounds);
-        offsetY = (textBounds.bottom - textBounds.top) / 2;
+        mSelectedArcTextPaint.getTextBounds(getText(), 0, getText().length(), textBounds);
+        //offsetY = (textBounds.bottom - textBounds.top) / 2;
 
-        mInnerTextPaint.setTextSize(50);
+        mSelectedArcTextPaint.setTextSize(textSize);
 //        canvas.drawText(getText(), touchDownX, touchDownY+ mOuterRadius, mInnerTextPaint);
 
         float offsetX = 0;
@@ -871,7 +913,10 @@ public class CustomKeyboard extends View {
         mArcTextPaint.setColor(Color.BLACK);
         mArcTextPaint.setAntiAlias(true);
         mArcTextPaint.setTextAlign(Paint.Align.CENTER);
+        mArcTextPaint.setTextSize(textSize);
         float mArcTextRadius;
+
+        mArcTextRadius = (float) (0.55 * mOuterRadius); //(0.9 * mOuterRadius)
 
         for (int i = 0; i < 10; i++) {
             //PointF textPos = getArcTextPoint(i);
@@ -880,15 +925,16 @@ public class CustomKeyboard extends View {
             String text = getTextForArc(i);
             mArcTextPaint.getTextBounds(text, 0, text.length(), textBounds);
 
-            mArcTextRadius = (float) (0.9 * mOuterRadius);
             offsetY = (textBounds.bottom - textBounds.top) / 2;
             float angleRad = (float) Math.toRadians(getMidAngle(i));
             textPos.x = touchDownX + (float) (mArcTextRadius * Math.cos(angleRad)) + offsetX;
             textPos.y = touchDownY + (float) (mArcTextRadius * Math.sin(angleRad)) + offsetY;
-            mArcTextPaint.setTextSize(50);
-            canvas.drawText(getTextForArc(i), textPos.x, textPos.y + mOuterRadius, mArcTextPaint);
 
 
+            if(i==arc)
+                canvas.drawText(getTextForArc(i), textPos.x, textPos.y + mOuterRadius, mSelectedArcTextPaint);
+            else
+                canvas.drawText(getTextForArc(i), textPos.x, textPos.y + mOuterRadius, mArcTextPaint);
         }
 
     }
@@ -906,15 +952,20 @@ public class CustomKeyboard extends View {
 
     //movement on chakra
     public void handleMove(int x, int y) {
+
         touchMovementX = (int) x - touchDownX;
         touchMovementY = (int) y - touchDownY;
 
-        if (y == 0 && touchMovementX < mOuterRadius
-                && touchMovementY < mOuterRadius) {
+        if (y == 0 && touchMovementX < mOuterRadius && touchMovementY < mOuterRadius) {
+
             float outerRadius = (float) (1.2 * mOuterRadius);
             touchMovementY = -(int) Math.sqrt(outerRadius * outerRadius
                     - touchMovementX * touchMovementX);
-        }
+            Log.d(TAG,"No longer getting y coordinate.");
+            Log.d(TAG,"Handle move: y=0, recalculating dy:"+touchMovementY);
+        }else
+            Log.d(TAG,"y coordinate:"+y);
+
         radius = (int) Math.sqrt((touchMovementX * touchMovementX)
                 + (touchMovementY * touchMovementY));
 

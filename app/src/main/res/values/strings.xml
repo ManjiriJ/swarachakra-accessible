@@ -137,4 +137,65 @@
     
     <string name="word_shown">लिहायचा शब्द</string>
     <string name="word_typed">लिहीलेला शब्द</string>
+
+    <string name="livtoken">71fcaf2fbb09da0cfff4113e0daae662d4c175c0</string>
+
+    <string name="a2325">कमळ</string>
+    <string name="a2326">खजूर</string>
+    <string name="a2327">गणपति</string>
+    <string name="a2328">घड्याळ</string>
+    <string name="a2329">ङ</string>
+    <string name="a2330">चमचा</string>
+    <string name="a2331">छत्री</string>
+    <string name="a2332">जहाज</string>
+    <string name="a2333">झबले</string>
+    <string name="a2334">ञ</string>
+    <string name="a2335">टरबूज</string>
+    <string name="a2336">ठसा</string>
+    <string name="a2337">डमरू</string>
+    <string name="a2338">ढग</string>
+    <string name="a2339">बाण</string>
+    <string name="a2340">तबला</string>
+    <string name="a2341">थवा</string>
+    <string name="a2342">दप्तर</string>
+    <string name="a2343">धनुष्य</string>
+    <string name="a2344">नळ</string>
+    <string name="a2346">पपई</string>
+    <string name="a2347">फणस</string>
+    <string name="a2348">बगळा</string>
+    <string name="a2349">भोवरा</string>
+    <string name="a2350">मगर</string>
+    <string name="a2351">यज्ञ</string>
+    <string name="a2352">रथ</string>
+    <string name="a2354">लसून</string>
+    <string name="a2357">वजन</string>
+    <string name="a2358">शहामृग</string>
+    <string name="a2359">षटकोन</string>
+    <string name="a2360">ससा</string>
+    <string name="a2361">हरीण</string>
+    <string name="a2355">बाळ</string>
+    <string name="a2392">क़</string>
+    <string name="a2393">ख़</string>
+    <string name="a2394">ग़</string>
+    <string name="a2395">ज़</string>
+    <string name="a2396">ड़</string>
+    <string name="a2397">ढ़</string>
+    <string name="a2398">फ़</string>
+    <string name="a2399">य़</string>
+    <string name="a2309">अभ्यास</string>
+    <string name="a2310">आगगाडी</string>
+    <string name="a2311">इमारत</string>
+    <string name="a2312">ईडलिंबू</string>
+    <string name="a2313">उखल</string>
+    <string name="a2314">ऊस</string>
+    <string name="a2319">एडका</string>
+    <string name="a2320">ऐरण</string>
+    <string name="a2323">ओणवा</string>
+    <string name="a2324">औषध</string>
+    <string name="a2371">पृथ्वी</string>
+    <string name="a2315">ऋषि</string>
+    <string name="a2373">बॅट</string>
+    <string name="a2321">आॅगस्ट </string>
+    <string name="a2377">डॉक्टर</string>
+
 </resources>
