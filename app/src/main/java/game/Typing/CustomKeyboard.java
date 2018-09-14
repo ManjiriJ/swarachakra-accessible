@@ -59,6 +59,8 @@ public class CustomKeyboard extends View {
     public String[] vowels_aah = new String[]{"\u0905","\u0906","\u0907","\u0908","\u0909","\u090A","\u090F","\u0910","\u0913","\u0914"};
     public String[] vowes_uuh = new String[]{"\u0960","\u0944","","\u093D","\u0946","\u094A","\u0945","\u0972","\u0949","\u0911"};
     public String keyCodelabel = "";
+    public String keyCodeInput = "";
+    public boolean showChakra = false;
     public PopupWindow popUp;
     public int keyCodeClicked;
     public RelativeLayout relativelayout;
@@ -514,8 +516,10 @@ public class CustomKeyboard extends View {
         super.onDraw(canvas);
         Log.d(CHAKRATAG,"onDraw");
 
-        if (mTouchlistener.multi_touch == false)
+        if (mTouchlistener.multi_touch == false || !showChakra) {
+            Log.d(CHAKRATAG,"No chakra");
             return;
+        }
         DisplayMetrics metrics = new DisplayMetrics();
         mHostActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
         width = metrics.heightPixels;
@@ -596,6 +600,7 @@ public class CustomKeyboard extends View {
 //        if( touchMovementX - mOuterRadius > 87.5 || touchMovementY - mOuterRadius> 87.5){
 
         //Draw chakra letters
+        //TODO: hard coded values
         for (int i = 0; i < 10; i++) {
 
             if (radius > mInnerRadius) {
@@ -607,15 +612,16 @@ public class CustomKeyboard extends View {
                     String speak_text="";
                     if (arc == 10) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_aah[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
+
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
                                     mTouchlistener.flag1[i1] = 1;
@@ -633,14 +639,14 @@ public class CustomKeyboard extends View {
                         if (mTouchlistener.flag1[arc] == 0) {
 
 
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_aah[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
                                     mTouchlistener.flag1[i1] = 1;
@@ -655,14 +661,14 @@ public class CustomKeyboard extends View {
                         }
                     } else if (arc == 2) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_aah[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -677,14 +683,14 @@ public class CustomKeyboard extends View {
                         }
                     } else if (arc == 3) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_speak[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -700,14 +706,14 @@ public class CustomKeyboard extends View {
 
                     } else if (arc == 4) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_speak[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -722,14 +728,14 @@ public class CustomKeyboard extends View {
                         }
                     } else if (arc == 5) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text =  vowels_speak[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -743,14 +749,14 @@ public class CustomKeyboard extends View {
                         }
                     } else if (arc == 6) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_aah[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -764,14 +770,14 @@ public class CustomKeyboard extends View {
                         }
                     } else if (arc == 7) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_aah[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -786,14 +792,14 @@ public class CustomKeyboard extends View {
                         }
                     } else if (arc == 8) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_aah[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -808,14 +814,14 @@ public class CustomKeyboard extends View {
                         }
                     } else if (arc == 9) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_aah[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel + vowels[arc];
+                                speak_text = keyCodeInput + vowels[arc];
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -830,14 +836,14 @@ public class CustomKeyboard extends View {
                         }
                     } else if (arc == 0) {
                         if (mTouchlistener.flag1[arc] == 0) {
-                            if(keyCodelabel.equals("अ")){
+                            if(keyCodeInput.equals("अ")){
                                 speak_text = vowels_aah[arc];
-                            }else if(keyCodelabel.equals("ृ")){
+                            }else if(keyCodeInput.equals("ृ")){
                                 speak_text = vowes_uuh[arc];
-                            }else if(keyCodelabel.equals("\u093E")){
+                            }else if(keyCodeInput.equals("\u093E")){
                                 speak_text = vowels_speak[arc];
                             }else{
-                                speak_text = keyCodelabel+"विराम";
+                                speak_text = keyCodeInput+"विराम";
                             }
                             for (int i1 = 0; i1 < 10; i1++) {
                                 if (i1 == arc) {
@@ -873,17 +879,18 @@ public class CustomKeyboard extends View {
         return getTextForArc(arc);
     }
 
+    //TODO: hard coded values
     public String getTextForArc(int region) {
-//        Log.d("Gettextforarc",keyCodelabel);
+//        Log.d("Gettextforarc",keyCodeInput);
         String str;
-        if(keyCodelabel.equals("\u0905")){
+        if(keyCodeInput.equals("\u0905")){
             str = vowels_aah[region];
-        }else if(keyCodelabel.equals("ृ")){
+        }else if(keyCodeInput.equals("ृ")){
             str = vowes_uuh[region];
-        }else if(keyCodelabel.equals("")){
+        }else if(keyCodeInput.equals("")){
             str = vowels_aah[region];
         }else{
-            str = keyCodelabel + vowels[region];
+            str = keyCodeInput + vowels[region];
         }
         //Log.d("String", Integer.toString(keyCode));
         return str;
@@ -1112,12 +1119,12 @@ public class CustomKeyboard extends View {
                 }
             }.start();
             //Intialising the flag value of this column to 1 and rest of the keys to 0
-            assign_flag(r,s);
+            setActiveKeyFlag(r,s);
             Log.d("key", "1");
 
         }
     }*/
-    /*public void assign_flag(int r,int s){
+    /*public void setActiveKeyFlag(int r,int s){
         for (int i = 0; i < 11; i++) {
             for (int j = 0; j < 7; j++) {
                 if (i == r && j == s) {

@@ -666,7 +666,7 @@ public class MainLanguage extends Language{
 
         KeyAttr myKey53 = new KeyAttr();
         myKey53.code = 54;
-        myKey53.label = "." ;//don't know, not used in Marathi
+        myKey53.label = "\u002E" ;//don't know, not used in Marathi
         myKey53.showChakra = false ;
         myKey53.showCustomChakra = false ;
         myKey53.customChakraLayout = new String[] {} ;
@@ -738,7 +738,7 @@ public class MainLanguage extends Language{
 
         KeyAttr myKey59 = new KeyAttr();
         myKey59.code = 60;
-        myKey59.label = "," ;//not sure, perhaps English comma
+        myKey59.label = "\u002C" ;//not sure, perhaps English comma
         myKey59.showChakra = false ;
         myKey59.showCustomChakra = false ;
         myKey59.customChakraLayout = new String[] {} ;

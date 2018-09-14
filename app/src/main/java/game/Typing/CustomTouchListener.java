@@ -2,7 +2,6 @@ package game.Typing;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.inputmethodservice.Keyboard;
@@ -27,9 +26,12 @@ import ai.liv.s2tlibrary.model.S2TError;
 import ai.liv.s2tlibrary.model.Transcription;*/
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
+
+import ai.liv.s2tlibrary.Speech2TextIntent;
+import ai.liv.s2tlibrary.model.CanonicalData;
+import ai.liv.s2tlibrary.model.S2TError;
+import ai.liv.s2tlibrary.model.Transcription;
 
 /*import ai.liv.s2tlibrary.Speech2TextIntent;
 import ai.liv.s2tlibrary.model.S2TError;
@@ -38,42 +40,47 @@ import ai.liv.s2tlibrary.model.Transcription;*/
 public class CustomTouchListener implements OnTouchListener {
 
     private CustomKeyboard viewHandle;
-    private int x,y;
+    private int x, y;
     private float width, height;
     public Vibrator myVib;
     private AudioManager am;
     public TextToSpeech tts, tts1;
-    int COUNT_DOWN_TIME=1000;
+    int COUNT_DOWN_TIME = 1000;
     int COUNT_DOWN_INTERVAL = 500;
-    int l,k;
-    float touchdX=0,touchdY=0,touchdX1=0,touchdY1=0,distance=0,distance1=0;
-    boolean touch_flag = false, multi_touch_flag = false, action_down_flag = false, multi_touch = false,tri_touch=false,navigator_flag=false;
+    int l, k;
+    float touchdX = 0, touchdY = 0, touchdX1 = 0, touchdY1 = 0, distance = 0, distance1 = 0;
+    boolean touch_flag = false, multi_touch_flag = false, action_down_flag = false, multi_touch = false, tri_touch = false, navigator_flag = false;
     private int rowCount = 11, columnCount = 6;
     //Remember active key
     int flag[][] = new int[rowCount][columnCount];
+    boolean wordBackspaceFlag = false;
+    Speech2TextIntent s2TIntent;
+    CountDownTimer timer;
 
     //Keeps track of active arc
     int flag1[] = new int[10];
-    boolean action_downflag2[] = {false,false,false};
+    boolean action_downflag2[] = {false, false, false};
 
-    int P_CHECK_FLAGS[][] =  new int[rowCount][columnCount];
+    int P_CHECK_FLAGS[][] = new int[rowCount][columnCount];
 
     //keep track of modal flags
     //boolean flag2[] = new boolean[3];
-    boolean PREV_COORDINATE=false;
-    int THRESHOLD_DIST = 50,THRESHOLD_DIST_LAST_ROW = 60;
-    boolean PROXIMITY_CHECK=false;
+    boolean PREV_COORDINATE = false;
+    int THRESHOLD_DIST = 20, THRESHOLD_DIST_LAST_ROW = 30;
+    boolean PROXIMITY_CHECK = false;
     boolean vowelBoolean = false;
     private int vibrateDuration = 50;
+    private int vibrateDurationAnchorKeys = 500;
     //private int rowCount = 11, columnCount = 6;
     private int rowNo, columnNo;
     private Language languageObjects;
     private int keyCode = -1;
     private String keyLabel;
+    private String keyInput;
     private String sampleWord;
 
-    private float higherVolume = (float)1;
-    private float lowerVolume = (float)1;
+    private float higherVolume = (float) 1;
+    private float lowerVolume = (float) 1;
 
     private boolean nuktaFlag, rakarFlag, rafarFlag, eyelashFlag;
 
@@ -99,63 +106,76 @@ public class CustomTouchListener implements OnTouchListener {
     final int NUKTACODE = 121;
     final int EYELASHCODE = 51;
 
+    final int ANUSWAR = 48;
+    final int CHANDRABINDU = 120;
+    final int AAKAR = 49;
+    final int RUKAR = 108;
+
+
     final String RAFAR = "\u0930\u094D";
     final String RAKAR = "\u094D\u0930";
     final String EYELASH = "\u0931\u200D\u094D";
 
 
-    public void setHandle(CustomKeyboard cb){
+    public void setHandle(CustomKeyboard cb) {
         viewHandle = cb;
     }
 
-    public float getX(){
+    public float getX() {
 
         return x;
     }
-    public float getY(){
+
+    public float getY() {
         return y;
     }
 
-    public void initTTS(){
+    public void initTTS() {
 
         tts = new TextToSpeech(viewHandle.mHostActivity, onInit);
+        tts.addSpeech("\u0933", viewHandle.mHostActivity.getPackageName(), R.raw.la);
+        //tts.addSpeech()
+        tts.addEarcon("voice typing", viewHandle.mHostActivity.getPackageName(), R.raw.speaknow2);
+
         tts1 = new TextToSpeech(viewHandle.mHostActivity, onInit1);
+        tts1.addSpeech("\u0933", viewHandle.mHostActivity.getPackageName(), R.raw.la);
+        tts1.addEarcon("voice typing", viewHandle.mHostActivity.getPackageName(), R.raw.speaknow2);
         /*for(int i = 0 ;i<3;i++){
             flag2[i] = false;
         }*/
         languageObjects = new MainLanguage();
-        int codePoint = (int)languageObjects.myKey.get(0).label.charAt(0);
-        Log.d(TAG,codePoint+"");
+        int codePoint = (int) languageObjects.myKey.get(0).label.charAt(0);
+        Log.d(TAG, codePoint + "");
         String packageN = viewHandle.mHostActivity.getPackageName();
         String word = "";
 
         myVib = (Vibrator) viewHandle.mHostActivity.getSystemService(Context.VIBRATOR_SERVICE);
         am = (AudioManager) viewHandle.mHostActivity.getSystemService(Context.AUDIO_SERVICE);
 
-        for(int i=0;i<languageObjects.nKeys;i++){
+        for (int i = 0; i < languageObjects.nKeys; i++) {
             word = "";
-            if(languageObjects.myKey.get(i).label.length()==1) {
+            if (languageObjects.myKey.get(i).label.length() == 1) {
 
                 codePoint = (int) languageObjects.myKey.get(i).label.charAt(0);
                 Log.d(TAG, codePoint + "");
 
-                int stringID = viewHandle.getResources().getIdentifier("a"+codePoint,"string",packageN);
+                int stringID = viewHandle.getResources().getIdentifier("a" + codePoint, "string", packageN);
 
                 try {
                     word = viewHandle.getResources().getString(stringID);
                     //viewHandle.getResources().getString(stringID);
 
-                }catch(Exception ex){
+                } catch (Exception ex) {
 
-                    word="";
+                    word = "";
                     //ex.printStackTrace();
                 }
-                Log.d(TAG,languageObjects.myKey.get(i).label+":"+word);
+                Log.d(TAG, languageObjects.myKey.get(i).label + ":" + word);
                 //languageObjects.myKey.get(i).exampleWord = word;
                 /*Log.d(POSITION,languageObjects.myKey.get(i).exampleWord);*/
             }
             languageObjects.myKey.get(i).exampleWord = word;
-            Log.d(POSITION,languageObjects.myKey.get(i).exampleWord);
+            Log.d(POSITION, languageObjects.myKey.get(i).exampleWord);
 
            /* myVib = (Vibrator) viewHandle.mHostActivity.getSystemService(Context.VIBRATOR_SERVICE);
             am = (AudioManager) viewHandle.mHostActivity.getSystemService(Context.AUDIO_SERVICE);*/
@@ -168,6 +188,72 @@ public class CustomTouchListener implements OnTouchListener {
         rakarFlag = false;
         eyelashFlag = false;
 
+        initVoice();
+    }
+
+    public void initVoice() {
+
+        s2TIntent = new Speech2TextIntent.Speech2TextIntentBuilder(viewHandle.mHostActivity, new Speech2TextIntent.Speech2TextIntentCallback() {
+            @Override
+            public void onTransactionEnd() {
+                Log.d(TAG, "Transaction has ended, service has stopped");
+            }
+
+            @Override
+            public void onTranscriptionReceived(ArrayList<Transcription> transcriptions, CanonicalData a) {
+                //if (!isDetached()) {
+                if (transcriptions.size() > 0) {
+                    //if (getView() != null) {
+                    View focusCurrent = viewHandle.mHostActivity.getWindow().getCurrentFocus();
+                    EditText edittext = (EditText) focusCurrent;
+                    edittext.setText(transcriptions.get(0).getText());
+                    //}
+                }
+                //}
+            }
+
+
+            @Override
+            public void onPartialTranscriptionReceived(ArrayList<Transcription> transcriptions) {
+                //if (!isDetached()) {
+                if (transcriptions.size() > 0) {
+                    //if (getView() != null) {
+                    // contentView1.setText(contentView1.getText()+transcriptions.get(0).getText());
+                    View focusCurrent = viewHandle.mHostActivity.getWindow().getCurrentFocus();
+                    EditText edittext = (EditText) focusCurrent;
+                    edittext.setText(transcriptions.get(0).getText());
+                    //}
+                }
+                //}
+            }
+
+            @Override
+            public void onError(S2TError error) {
+                Toast.makeText(viewHandle.mHostActivity.getApplicationContext(), "Error:" + error.message + ", code:" + error.errorCode, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onRecordingEnd() {
+                Log.d(TAG, "Recording has ended, fetching transcription");
+            }
+
+            @Override
+            public void onAmplitudeChanged(double v) {
+
+            }
+
+        }).setLanguage(Speech2TextIntent.LANGUAGE_HINDI).setStreaming(true).setView(Speech2TextIntent.VIEW_KEYBOARD).build();
+
+
+
+        /*b1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //lang = prefs.getString("pref_language", Speech2TextIntent.LANGUAGE_ENGLISH);
+                s2TIntent.setLanguage(Speech2TextIntent.LANGUAGE_HINDI);
+                s2TIntent.startService();
+            }
+        });*/
     }
 
     public void speakOut_pitch(String keyCodelabel) {
@@ -184,44 +270,52 @@ public class CustomTouchListener implements OnTouchListener {
 //        }
     }
 
-    public void speakOut(String keyCodelabel,float pitch) {
+    public void speakOut(String keyCodelabel, float pitch) {
 //        if(!isAccessibilitySettingsOn(mHostActivity.getApplicationContext())){
-        if(pitch == 0.6){
+        if (pitch == 0.6) {
             tts.setPitch((float) 0.6);
-        }else{
+        } else {
             tts.setPitch(pitch);
         }
         tts.speak(keyCodelabel, TextToSpeech.QUEUE_FLUSH, null);
     }
 
     //Called for keys like backspace, enter, space, etc
-    public void key_touch(int r, int s, String label,int vibrate_time){
-        Log.d(TAG,"On key touch");
-        Log.d(SEQUENCE,"Handle vibration and audio feedback for function keys");
+    public void key_touch(int r, int s, String label, int vibrate_time) {
+        Log.d(TAG, "On key touch");
+        Log.d(SEQUENCE, "Handle vibration and audio feedback for function keys");
 
+        //?If the key has not been handled before
         if (flag[r][s] == 0) {
             speakOut(label);
             myVib.vibrate(vibrate_time);
-            CountDownTimer timer = new CountDownTimer(COUNT_DOWN_TIME , COUNT_DOWN_INTERVAL ) {
+
+            if (timer == null)
+                timer.cancel();
+            timer = new CountDownTimer(COUNT_DOWN_TIME, COUNT_DOWN_INTERVAL) {
 
                 public void onTick(long millisUntilFinished) {
-                    PROXIMITY_CHECK =true;
-                    Log.i("Countdown Timer: ", "seconds remaining: " + millisUntilFinished / 1000);
+                    PROXIMITY_CHECK = true;
+                    Log.d("Countdown Timer: ", "seconds remaining: " + millisUntilFinished / 1000);
                 }
 
                 public void onFinish() {
                     //Done timer time out
-                    Log.i("Countdown Timer:","TimeOut");
+                    Log.d("Countdown Timer:", "TimeOut");
                 }
             }.start();
             //Intialising the flag value of this column to 1 and rest of the keys to 0
-            assign_flag(r,s);
+            setActiveKeyFlag(r, s);
             Log.d("key", "1");
 
         }
     }
 
-    public void assign_flag(int r,int s){
+    public void setActiveKeyFlag(int r, int s) {
+
+        //Set the currently active key
+        resetFlagArray(0);
+        flag[r][s] = 1;
 
         /*for (int i = 0; i < 11; i++) {
             for (int j = 0; j < 7; j++) {
@@ -233,13 +327,12 @@ public class CustomTouchListener implements OnTouchListener {
             }
         }*/
 
-        resetFlagArray(0);
-        flag[r][s]=1;
+
     }
 
-    public void proximity_check(int r,int s){
+    public void proximity_check(int r, int s) {
 
-        if(r>=rowCount || s>=columnCount) {
+        if (r >= rowCount || s >= columnCount) {
             Log.d(SEQUENCE, "Array index out of bounds");
             //return;
         }
@@ -248,7 +341,7 @@ public class CustomTouchListener implements OnTouchListener {
 
             //check any other p_check_flags are intialised to 1
             for (int i = 0; i < rowCount; i++) {
-                for (int j = 0; j <columnCount; j++) {
+                for (int j = 0; j < columnCount; j++) {
                     if (P_CHECK_FLAGS[i][j] == 1) {
                         PREV_COORDINATE = true;
                     }
@@ -258,7 +351,7 @@ public class CustomTouchListener implements OnTouchListener {
             //if there is no other flags intilaise then set a new starting point
             if (PREV_COORDINATE == false) {
                 for (int i = 0; i < rowCount; i++) {
-                    for (int j = 0; j <columnCount; j++) {
+                    for (int j = 0; j < columnCount; j++) {
                         if (i == r && j == s) {
                             P_CHECK_FLAGS[i][j] = 1;
                         }
@@ -280,7 +373,7 @@ public class CustomTouchListener implements OnTouchListener {
             PROXIMITY_CHECK = false;
             //setting all the flags to 0
             for (int i = 0; i < rowCount; i++) {
-                for (int j = 0; j <columnCount; j++) {
+                for (int j = 0; j < columnCount; j++) {
                     P_CHECK_FLAGS[i][j] = 0;
                 }
             }
@@ -291,7 +384,8 @@ public class CustomTouchListener implements OnTouchListener {
         Log.d("proximitydistance", String.valueOf(distance));
 
     }
-    public String getLastword(){
+
+    public String getLastword() {
 
         View focusCurrent = viewHandle.mHostActivity.getWindow().getCurrentFocus();
         EditText edittext = (EditText) focusCurrent;
@@ -309,17 +403,19 @@ public class CustomTouchListener implements OnTouchListener {
         int lastDelimiterPosition = text.lastIndexOf(delimiter);
         String lastWord = lastDelimiterPosition == -1 ? text :
                 text.substring(lastDelimiterPosition + delimiter.length());
-        Log.d(TAG,"Last word:"+lastWord);
+        Log.d(TAG, "Last word:" + lastWord);
         return lastWord;
     }
 
-    public void log_chars(char c){
+    public void log_chars(char c) {
 
 //        //append & delete code for FT
         viewHandle.et1 = (EditText) viewHandle.mHostActivity.findViewById(R.id.editText1);
-        viewHandle.et1.append(c+"");
+        Log.d("ACTION_UP", "before-log_chars:" + viewHandle.et1.getText());
+        viewHandle.et1.append(c + "");
         viewHandle.et1.getText().delete(viewHandle.et1.getText().length() - 1,
                 viewHandle.et1.getText().length());
+        Log.d("ACTION_UP", "after-log_chars:" + viewHandle.et1.getText());
     }
 
     TextToSpeech.OnInitListener onInit = new TextToSpeech.OnInitListener() {
@@ -344,7 +440,7 @@ public class CustomTouchListener implements OnTouchListener {
                 if (result == TextToSpeech.LANG_MISSING_DATA
                         || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.d(TAG, "1:This Language is not supported");
-                    Toast.makeText(viewHandle.getContext(), "Your default text to speech engine does not support Hindi. Please download Hindi locale for current TTS or switch to a text to speech engine that supports Hindi locale.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(viewHandle.getContext(), "Your default text to speech engine does not support Hindi. Please download Hindi locale for current TTS or switch to a text to speech engine that supports Hindi locale.", Toast.LENGTH_SHORT).show();
                 } else {
 
 //                    speakOut(keyCodelabel);
@@ -358,7 +454,7 @@ public class CustomTouchListener implements OnTouchListener {
     };
 
     //Text to Speech
-    TextToSpeech.OnInitListener  onInit1 = new TextToSpeech.OnInitListener() {
+    TextToSpeech.OnInitListener onInit1 = new TextToSpeech.OnInitListener() {
         @Override
         public void onInit(int status) {
             if (status == TextToSpeech.SUCCESS) {
@@ -367,7 +463,7 @@ public class CustomTouchListener implements OnTouchListener {
                 if (result1 == TextToSpeech.LANG_MISSING_DATA
                         || result1 == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.d(TAG, "2:This Language is not supported");
-                    Toast.makeText(viewHandle.getContext(), "Your default text to speech engine does not support Hindi. Please download Hindi locale for current TTS or switch to a text to speech engine that supports Hindi locale.",Toast.LENGTH_LONG).show();
+                    Toast.makeText(viewHandle.getContext(), "Your default text to speech engine does not support Hindi. Please download Hindi locale for current TTS or switch to a text to speech engine that supports Hindi locale.", Toast.LENGTH_LONG).show();
 
                 } else {
 
@@ -418,8 +514,8 @@ public class CustomTouchListener implements OnTouchListener {
 
             case MotionEvent.ACTION_DOWN:
 
-                Log.d(TAG,"Action down: key down");
-                Log.d(SEQUENCE,"Action down: key down");
+                Log.d(TAG, "Action down: key down");
+                Log.d(SEQUENCE, "Action down: key down");
 
                 //int curkey = viewHandle.keyCodeClicked;
                 Display display = viewHandle.mHostActivity.getWindowManager().getDefaultDisplay();
@@ -434,11 +530,12 @@ public class CustomTouchListener implements OnTouchListener {
                 x = (int) event.getX();
                 y = (int) event.getY();
 
-                Log.d(SEQUENCE,"Action down: get keycode and keylabels");
+                Log.d(SEQUENCE, "Action down: get keycode and keylabels and set keyactive flag");
                 keyCode = getKeyPosition();
 
+                //TODO: Do we need this flag
                 action_down_flag = true;
-                viewHandle.action_up  = false;
+                viewHandle.action_up = false;
                 //Log.d("touch", "single touch");
 
                 /*width = viewHandle.mKeyboardView.getWidth();
@@ -461,59 +558,83 @@ public class CustomTouchListener implements OnTouchListener {
                 //modal keys: 501/53:rafar, 502/52:trakar, 503/121:nukta, 504 / 51: eyelash
                 //Log.d("height",String.valueOf(height));
 
-               /* speakOut(keyLabel);*/
-                Log.d(SEQUENCE,"Set keyCodelabel:"+keyLabel);
+                /* speakOut(keyLabel);*/
+                Log.d(SEQUENCE, "Set keyCodelabel:" + keyLabel);
                 viewHandle.keyCodelabel = keyLabel;
+                viewHandle.keyCodeInput = keyInput;
                 //myVib.vibrate(COUNT_DOWN_INTERVAL);
 
-                switch(keyCode){
+                //TODO: Can we collapse the switch, we just need distinction between anchor and non-anchor keys
+                switch (keyCode) {
 
                     //anchor keys
+                    //TODO: Move to constants at the top
                     case 1:
                     case 5:
                     case 18:
                     case 39:
                     case 136:
 
-                    myVib.vibrate(COUNT_DOWN_INTERVAL);
-                    speakOut(keyLabel);
-                    break;
+                        //TODO: see appropriate vibrate intervals for function and regular keys
+                        myVib.vibrate(vibrateDurationAnchorKeys);
+                        speakOut(keyLabel);
+                        break;
                     case BACKSPACE:
-                        key_touch(rowNo,columnNo,"delete",vibrateDuration);
+                        //key_touch(rowNo,columnNo,"delete",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
                     case LEFTARROW:
-                        key_touch(rowNo,columnNo,"move one left",vibrateDuration);
+                        //key_touch(rowNo,columnNo,"move one left",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
                     case RIGHTARROW:
-                        key_touch(rowNo,columnNo,"move one right",vibrateDuration);
+                        //key_touch(rowNo,columnNo,"move one right",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
                     case SPACE:
-                        key_touch(rowNo,columnNo,"Space key",vibrateDuration);
+                        //key_touch(rowNo,columnNo,"Space key",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
                     case ENTER:
-                        key_touch(rowNo,columnNo,"Enter key",vibrateDuration);
+                        //key_touch(rowNo,columnNo,"Enter key",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
                     case VOICETYPING:
-                        key_touch(rowNo,columnNo,"Start voice typing",vibrateDuration);
+                    case 138:
+                        //key_touch(rowNo,columnNo,"Start voice typing",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
                     case LANGUAGE_EN:
-                        key_touch(rowNo,columnNo,"Switch to English keyboard",vibrateDuration);
+                        //key_touch(rowNo,columnNo,"Switch to English keyboard",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
                     case SETTINGS:
-                        key_touch(rowNo,columnNo,"Go to keyboard settings",vibrateDuration);
+                        //key_touch(rowNo,columnNo,"Go to keyboard settings",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
                     case SHIFT:
-                        key_touch(rowNo,columnNo,"Shift key",vibrateDuration);
+                        //key_touch(rowNo,columnNo,"Shift key",vibrateDuration);
+                        myVib.vibrate(vibrateDuration);
+                        speakOut(keyLabel);
                         break;
 
                     default:
                         myVib.vibrate(vibrateDuration);
                         speakOut(keyLabel);
                 }
+                giveWordFeedback(viewHandle.keyCodelabel, sampleWord);
 
-                if (y < height/9 ) {
+                if (y < height / 9) {
 
-                    Log.d(POSITION,"Row 1");
+                    Log.d(POSITION, "Row 1");
 
                    /* if (x < width/6) {
                         Log.d(POSITION,"Column 1");
@@ -606,7 +727,7 @@ public class CustomTouchListener implements OnTouchListener {
 //                                myVib.vibrate(50);
                     }*/
 
-                } else if (y >  height/9 && y < 2 * height/9) {
+                } else if (y > height / 9 && y < 2 * height / 9) {
                     /*
                     Log.d(POSITION,"Row 2");
 
@@ -903,7 +1024,7 @@ public class CustomTouchListener implements OnTouchListener {
 //                                myVib.vibrate(50);
 
                     }*/
-                } else if (y > 2 * height/9 && y < 3 * height/9) {
+                } else if (y > 2 * height / 9 && y < 3 * height / 9) {
                     /*
                     if (x < width/6) {
                         if (flag[3][0] == 0) {
@@ -1190,8 +1311,7 @@ public class CustomTouchListener implements OnTouchListener {
                         }
                         myVib.vibrate(50);
                     }*/
-                }
-                else if (y > 3 * height/9 && y < 4 * height/9) {
+                } else if (y > 3 * height / 9 && y < 4 * height / 9) {
                     
                     /*if (x < width/6) {
                         if (flag[4][0] == 0) {
@@ -1479,7 +1599,7 @@ public class CustomTouchListener implements OnTouchListener {
                         }
                         myVib.vibrate(50);
                     }*/
-                } else if (y > 4 * height/9 && y < 5 * height/9) {
+                } else if (y > 4 * height / 9 && y < 5 * height / 9) {
                    /* if (x < width/6) {
                         if (flag[5][0] == 0) {
                             if (flag2[1]) {
@@ -1756,7 +1876,7 @@ public class CustomTouchListener implements OnTouchListener {
                         myVib.vibrate(50);
                     }*/
 
-                } else if (y > 5 * height/9 && y < 6 * height/9) {
+                } else if (y > 5 * height / 9 && y < 6 * height / 9) {
                     /*if (x < width/6) {
                         if (flag[6][0] == 0) {
                             if (flag2[1]) {
@@ -2036,7 +2156,7 @@ public class CustomTouchListener implements OnTouchListener {
                         }
                         myVib.vibrate(50);
                     }*/
-                } else if (y > 6 * height/9 && y < 7 * height/9) {
+                } else if (y > 6 * height / 9 && y < 7 * height / 9) {
                     /*if (x < width/6) {
                         if (flag[7][0] == 0) {
                             if (flag2[1]) {
@@ -2312,7 +2432,7 @@ public class CustomTouchListener implements OnTouchListener {
                         }
                         myVib.vibrate(50);
                     }*/
-                } else if (y > 7 * height/9 && y < 8 * height/9) {
+                } else if (y > 7 * height / 9 && y < 8 * height / 9) {
                     /*if (x < width/6) {
                         if (flag[8][0] == 0) {
                             if (flag2[1]) {
@@ -2530,7 +2650,7 @@ public class CustomTouchListener implements OnTouchListener {
                         }
                         myVib.vibrate(50);
                     }*/
-                } else if (y > 8 * height/9 && y < 9 * height/9) {
+                } else if (y > 8 * height / 9 && y < 9 * height / 9) {
                     /*if(x < width/6){
                         viewHandle.keyCodelabel = "";
                         key_touch(9,3,"Left",50);
@@ -2549,34 +2669,49 @@ public class CustomTouchListener implements OnTouchListener {
 
             case MotionEvent.ACTION_POINTER_DOWN:
 
-            Log.d(TAG,"Action pointer down: multiple fingers touching the screen");
+                //TODO:handle active key state for the keys that span more than one key width / height
+                Log.d(TAG, "Action pointer down: multiple fingers touching the screen");
                 //Get the active key
                 for (int i = 0; i < rowCount; i++) {
                     for (int j = 0; j < columnCount; j++) {
                         if (flag[i][j] == 1) {
                             l = i;
                             k = j;
+                            Log.d(SEQUENCE, "Active key at:" + l + ", " + j);
+                            Log.d(TAG, "Active key at:" + l + ", " + j);
                         }
                     }
                 }
 
                 //Detect if three fingers down / second finger down / second finger down on arrow keys
-                if(event.getPointerCount()==3){
+                if (event.getPointerCount() == 3) {
+                    //User is going for a three finger gesture or has put down third finger to hide unintentional chakra
+                    Log.d(SEQUENCE, "User is going for a three finger gesture or has put down third finger to hide unintentional chakra");
 
                     viewHandle.desetArc();
                     tri_touch = true;
-                    multi_touch=false;
+                    multi_touch = false;
                     navigator_flag = false;
+                    wordBackspaceFlag = false;
                     viewHandle.setTouchDownPoint(event.getX(pointerIndex), event.getY(pointerIndex));
-                    viewHandle.keyCodelabel="";
-                    Log.d(TAG,"Three finger gesture");
+                    viewHandle.keyCodelabel = "";
+                    Log.d(TAG, "Three finger gesture. Hide chakra if visible.");
 
-                }else if(event.getPointerCount()==2 && l<rowCount && l>0){
+                    if (timer != null) {
 
-                    Log.d(TAG,"Second finger down: split-tap gesture");
+                        //Improvement 1
+                        Log.d(TAG, "Cancel timer. Stop speaking");
+                        timer.cancel();
+                        tts.stop();
+                        tts1.stop();
+                    }
+
+                } else if (event.getPointerCount() == 2 && l < (rowCount - 1) && l >= 0) {
+
+                    Log.d(TAG, "Second finger down: split-tap gesture");
                     multi_touch = true;
                     navigator_flag = false;
-                    tri_touch=false;
+                    tri_touch = false;
                     PointF f = new PointF();
                     f.x = event.getX(pointerIndex);
                     f.y = event.getY(pointerIndex);
@@ -2587,11 +2722,13 @@ public class CustomTouchListener implements OnTouchListener {
 
                     float theta = (float) Math.toDegrees(Math.atan2(touchMovementY,
                             touchMovementX));
+
+                    //This theta is wrt the key and second finger down
                     Log.d("theta value", Integer.toString((int) theta));
                     viewHandle.arc = viewHandle.findArc(theta);
                     myVib.vibrate(vibrateDuration);
 
-                }else if(event.getPointerCount() == 2 && keyCode == LEFTARROW){
+                } else if (event.getPointerCount() == 2 && keyCode == LEFTARROW) {
 
                     //TODO:Move to the beginning of the current word:
                     Log.d("navigate", "Move to the beginning of the current word");
@@ -2608,22 +2745,22 @@ public class CustomTouchListener implements OnTouchListener {
                         // gives you the substring from start to the current cursor
                         // position
                         s1 = s1.substring(0, selectionEnd);
-                        Log.d("navigate","Selected:"+s1);
+                        Log.d("navigate", "Selected:" + s1);
 //                            speakOut_pitch(text);
                     }
                     String delimiter = " ";
                     int x = s1.lastIndexOf(delimiter);
-                    Log.d("x",x+"");
-                    if(x!=-1){
+                    Log.d("x", x + "");
+                    if (x != -1) {
                         edittext.setSelection(x);
                         speakOut(getLastword(), (float) 0.8);
-                    }else{
+                    } else {
                         edittext.setSelection(0);
                         speakOut("Starting of the Text", (float) 0.8);
                     }
 
 
-                }else if(event.getPointerCount() == 2 && keyCode == RIGHTARROW){
+                } else if (event.getPointerCount() == 2 && keyCode == RIGHTARROW) {
 
                     //TODO:Move to the end of the current word
                     //split tap for right arrow
@@ -2641,17 +2778,17 @@ public class CustomTouchListener implements OnTouchListener {
                     }
                     String delimiter = " ";
                     int x = s1.indexOf(" ");
-                    Log.d("x",x+"");
-                    if(x!=-1){
-                        edittext.setSelection(x+1);
+                    Log.d("x", x + "");
+                    if (x != -1) {
+                        edittext.setSelection(x + 1);
                         speakOut(getLastword(), (float) 0.8);
-                    }else{
+                    } else {
                         edittext.setSelection(0);
                         speakOut("Ending of the Text", (float) 0.8);
                     }
 
 
-                    Log.d("navigate","right");
+                    Log.d("navigate", "right");
 
                 }
                 //Log.d("check_view_added", "View added");
@@ -2661,10 +2798,10 @@ public class CustomTouchListener implements OnTouchListener {
             case MotionEvent.ACTION_MOVE:
 
                 Log.d(TAG, "ACTION_MOVE");
-                viewHandle.action_up =false;
-                boolean leftflag=false,rightflag=false;
+                viewHandle.action_up = false;
+                boolean leftflag = false, rightflag = false;
 
-                if(tri_touch == true){
+                if (tri_touch == true) {
 
                     Log.d(GESTURE, "Tri touch true");
 
@@ -2684,38 +2821,42 @@ public class CustomTouchListener implements OnTouchListener {
 //                                        Toast.makeText(mHostActivity,"left",Toast.LENGTH_SHORT).show();
 
                                 for (int i = 0; i < rowCount; i++) {
-                                    for (int j = 0; j <columnCount; j++) {
+                                    for (int j = 0; j < columnCount; j++) {
 
                                         //TODO:Check this, wrong key being set as active
-                                        if (i == 9 && j == 5) {
+                                        //if (i == 1 && j == 5) {
+                                        if (viewHandle.kbLayout[i][j] == BACKSPACE) {
                                             flag[i][j] = 1;
+                                            wordBackspaceFlag = true;
+                                            Log.d(GESTURE, "key:" + i + "," + j);
                                         } else {
                                             flag[i][j] = 0;
                                         }
                                     }
                                 }
-                                Log.d(GESTURE,"3-finger left swipe:"+f1.x);
+                                Log.d(GESTURE, "3-finger left swipe:" + f1.x);
                             }
                             // left to right swipe
                             //if second pointer has moved right by atleast 100, detect it as 3-finger right swipe: space ?delete
-                            else if(f1.x - viewHandle.touchDownX >100) {
+                            else if (f1.x - viewHandle.touchDownX > 100) {
 //                                        Toast.makeText(mHostActivity,"right",Toast.LENGTH_SHORT).show();
 
                                 for (int i = 0; i < rowCount; i++) {
-                                    for (int j = 0; j <columnCount; j++) {
-                                        if (i == 9 && j == 0) {
+                                    for (int j = 0; j < columnCount; j++) {
+                                        //if (i == 10 && j == 4) {
+                                        if (viewHandle.kbLayout[i][j] == SPACE) {
                                             flag[i][j] = 1;
+                                            Log.d(GESTURE, "key:" + i + "," + j);
                                         } else {
                                             flag[i][j] = 0;
                                         }
                                     }
                                 }
-                                Log.d(GESTURE,"3-finger right swipe:"+f1.x);
-                                Log.d(GESTURE,"key:"+flag);
-
-                            }else if(f1.x-viewHandle.touchDownX<100 || viewHandle.touchDownX-f1.x<100 ){
+                                Log.d(GESTURE, "3-finger right swipe:" + f1.x);
+                            } else if (f1.x - viewHandle.touchDownX <= 100 || viewHandle.touchDownX - f1.x <= 170) {
+                                //TODO: what going on here?
                                 for (int i = 0; i < rowCount; i++) {
-                                    for (int j = 0; j <columnCount; j++) {
+                                    for (int j = 0; j < columnCount; j++) {
 
                                         //TODO: What are we setting here?
                                         if (i == 1 && j == 6) {
@@ -2725,15 +2866,15 @@ public class CustomTouchListener implements OnTouchListener {
                                         }
                                     }
                                 }
-                                Log.d(GESTURE,"touch");
+                                Log.d(GESTURE, "touch");
                             }
-                            Log.d(GESTURE,"x,y:"+f1.x + "," + f1.y);
+                            Log.d(GESTURE, "x,y:" + f1.x + "," + f1.y);
                         }
 
                     }
-                }else if (multi_touch == true) {
+                } else if (multi_touch == true) {
 
-                    Log.d(GESTURE, "Move on Chakra");
+                    Log.d(GESTURE, "Move in Chakra");
 
                     for (int i = 0; i < event.getPointerCount(); ++i) {
                         pointerIndex = i;
@@ -2749,11 +2890,11 @@ public class CustomTouchListener implements OnTouchListener {
 
 //                                MultiTouch mt1 = new MultiTouch(mHostActivity, null, null,f1.x,f1.y,"\u0916",mKeyboardView);
 //                                mHostActivity.addContentView(mt1, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.FILL_PARENT));
-                            Log.d(TAG,"Current(x,y):"+f1.x + "," + f1.y);
+                            Log.d(TAG, "Current(x,y):" + f1.x + "," + f1.y);
                         }
 
                     }
-                }else {
+                } else {
                     // a pointer was moved
                     Log.d(TAG, "Single moving finger");
                     Log.d("MovementX,Y", "Single moving finger");
@@ -2777,13 +2918,14 @@ public class CustomTouchListener implements OnTouchListener {
                     //Log.d("height",String.valueOf(y));
                     keyCode = getKeyPosition();
                     viewHandle.keyCodelabel = keyLabel;
+                    viewHandle.keyCodeInput = keyInput;
+                    //sampleWord = sampleWord
 
-                    Log.d("MovementX,Y","Keycode"+keyCode);
+                    Log.d("MovementX,Y", "Keycode" + keyCode);
 
                     //TODO: remove from keyboard. Maybe needed in the tool
                     //leftswipe for reading the word
-                    if (y < 0)
-                    {
+                    if (y < 0) {
                         if (x < width / 3) {
                             if (flag[10][0] == 0) {
                                 viewHandle.tv1 = (TextView) viewHandle.mHostActivity.findViewById(R.id.textView1);
@@ -2837,7 +2979,7 @@ public class CustomTouchListener implements OnTouchListener {
 
                                 //check any other p_check_flags are intialised to 1
                                 for (int i = 0; i < rowCount; i++) {
-                                    for (int j = 0; j <columnCount; j++) {
+                                    for (int j = 0; j < columnCount; j++) {
                                         if (P_CHECK_FLAGS[i][j] == 1) {
                                             PREV_COORDINATE = true;
                                         }
@@ -2847,7 +2989,7 @@ public class CustomTouchListener implements OnTouchListener {
                                 //if there is no other flags intilaise then set a new starting point
                                 if (PREV_COORDINATE == false) {
                                     for (int i = 0; i < rowCount; i++) {
-                                        for (int j = 0; j <columnCount; j++) {
+                                        for (int j = 0; j < columnCount; j++) {
                                             if (i == r && j == s) {
                                                 P_CHECK_FLAGS[i][j] = 1;
                                             }
@@ -2869,7 +3011,7 @@ public class CustomTouchListener implements OnTouchListener {
                                 PROXIMITY_CHECK = false;
                                 //setting all the flags to 0
                                 for (int i = 0; i < rowCount; i++) {
-                                    for (int j = 0; j <columnCount; j++) {
+                                    for (int j = 0; j < columnCount; j++) {
                                         P_CHECK_FLAGS[i][j] = 0;
                                     }
                                 }
@@ -2909,7 +3051,7 @@ public class CustomTouchListener implements OnTouchListener {
                                     }
                                 }*/
                                 resetFlagArray(0);
-                                flag[0][5]=1;
+                                flag[0][5] = 1;
                                 myVib.vibrate(vibrateDuration);
                             }
                         }
@@ -2921,7 +3063,7 @@ public class CustomTouchListener implements OnTouchListener {
 
                     if (y < height / 9 && y > 0) {
 
-                       /* if (x < width/6) {
+                        if (x < width / 6) {
                             int r, s;
                             r = 1;
                             s = 0;
@@ -2929,8 +3071,8 @@ public class CustomTouchListener implements OnTouchListener {
                                 if (P_CHECK_FLAGS[r][s] == 0) {
 
                                     //check any other p_check_flags are intialised to 1
-                                    for (int i = 0; i < 11; i++) {
-                                        for (int j = 0; j < 7; j++) {
+                                    for (int i = 0; i < rowCount; i++) {
+                                        for (int j = 0; j < columnCount; j++) {
                                             if (P_CHECK_FLAGS[i][j] == 1) {
                                                 PREV_COORDINATE = true;
                                             }
@@ -2939,8 +3081,8 @@ public class CustomTouchListener implements OnTouchListener {
 
                                     //if there is no other flags intilaise then set a new starting point
                                     if (PREV_COORDINATE == false) {
-                                        for (int i = 0; i < 11; i++) {
-                                            for (int j = 0; j < 7; j++) {
+                                        for (int i = 0; i < rowCount; i++) {
+                                            for (int j = 0; j < columnCount; j++) {
                                                 if (i == r && j == s) {
                                                     P_CHECK_FLAGS[i][j] = 1;
                                                 }
@@ -2997,7 +3139,7 @@ public class CustomTouchListener implements OnTouchListener {
                                     }
                                     touchdX1 = x;
                                     touchdY1 = y;
-                                    CountDownTimer timer = new CountDownTimer(COUNT_DOWN_TIME , 500 ) {
+                                    CountDownTimer timer = new CountDownTimer(COUNT_DOWN_TIME, 500) {
 
                                         public void onTick(long millisUntilFinished) {
 
@@ -3016,8 +3158,8 @@ public class CustomTouchListener implements OnTouchListener {
                                     }.start();
 
                                     //Intialising the flag value of this column to 1 and rest of the keys to 0
-                                    for (int i = 0; i < 11; i++) {
-                                        for (int j = 0; j < 7; j++) {
+                                    for (int i = 0; i < rowCount; i++) {
+                                        for (int j = 0; j < columnCount; j++) {
                                             if (i == 1 && j == 0) {
                                                 flag[i][j] = 1;
                                             } else {
@@ -3031,7 +3173,7 @@ public class CustomTouchListener implements OnTouchListener {
                                     Log.d("key", "1");
                                 }
                             }
-                        }*/ /*else if (x > width/6 && x < 2 * width/6) {
+                        } /*else if (x > width/6 && x < 2 * width/6) {
                             int r, s;
                             r = 1;
                             s = 1;
@@ -7538,13 +7680,19 @@ public class CustomTouchListener implements OnTouchListener {
                 //else ends
 
 
-
                 break;
 
             case MotionEvent.ACTION_UP:
 
-                Log.d(TAG,"Action UP");
-                viewHandle.action_up =true;
+                Log.d(TAG, "Action UP");
+                String action = "ACTION_UP";
+                viewHandle.action_up = true;
+
+                if(timer!=null) {
+                    timer.cancel();
+                    tts.stop();
+                    tts1.stop();
+                }
 
                 //detect flag
                 l = 0;
@@ -7564,7 +7712,9 @@ public class CustomTouchListener implements OnTouchListener {
                 x = (int) event.getX();
                 y = (int) event.getY();
 
-                keyCode = getKeyPosition();
+                //keyCode = getKeyPosition();
+                //viewHandle.keyCodelabel = keyLabel;
+                //viewHandle.keyCodeInput = keyInput;
 
 
                 /*float a=0,b=0;
@@ -7578,10 +7728,10 @@ public class CustomTouchListener implements OnTouchListener {
 
                 }*/
 
-                if(keyCode == NUKTACODE){
+                if (keyCode == NUKTACODE) {
 
-                    if(nuktaFlag){
-                        Log.d(TAG,"Get rid of nukta");
+                    if (nuktaFlag) {
+                        Log.d(action, "Get rid of nukta");
                         nuktaFlag = false;
                         rafarFlag = false;
                         eyelashFlag = false;
@@ -7592,8 +7742,8 @@ public class CustomTouchListener implements OnTouchListener {
                         flag2[0] = false;*/
                         viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
 
-                    }else{
-                        Log.d(TAG,"Enable nukta");
+                    } else {
+                        Log.d(action, "Enable nukta");
                         nuktaFlag = true;
                         rafarFlag = false;
                         eyelashFlag = false;
@@ -7605,11 +7755,11 @@ public class CustomTouchListener implements OnTouchListener {
 
                         viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
                     }
-                }else if(keyCode == RAFARCODE){
+                } else if (keyCode == RAFARCODE) {
 
-                    if(rafarFlag){
+                    if (rafarFlag) {
 
-                        Log.d(TAG,"Get rid of rafar");
+                        Log.d(action, "Get rid of rafar");
                         nuktaFlag = false;
                         rafarFlag = false;
                         eyelashFlag = false;
@@ -7620,8 +7770,8 @@ public class CustomTouchListener implements OnTouchListener {
                         flag2[0] = false;*/
                         //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
 
-                    }else{
-                        Log.d(TAG,"Enable rafar");
+                    } else {
+                        Log.d(action, "Enable rafar");
                         nuktaFlag = false;
                         rafarFlag = true;
                         eyelashFlag = false;
@@ -7632,10 +7782,10 @@ public class CustomTouchListener implements OnTouchListener {
                         flag2[0] = false;*/
                         //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.rafar));
                     }
-                }else if(keyCode == RAKARCODE){
+                } else if (keyCode == RAKARCODE) {
 
-                    if(rakarFlag){
-                        Log.d(TAG,"Get rid of rakar");
+                    if (rakarFlag) {
+                        Log.d(action, "Get rid of rakar");
                         nuktaFlag = false;
                         rafarFlag = false;
                         eyelashFlag = false;
@@ -7646,9 +7796,9 @@ public class CustomTouchListener implements OnTouchListener {
                         flag2[0] = false;*/
                         //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
 
-                    }else{
+                    } else {
 
-                        Log.d(TAG,"Enable rakar");
+                        Log.d(action, "Enable rakar");
                         nuktaFlag = false;
                         rafarFlag = false;
                         eyelashFlag = false;
@@ -7659,11 +7809,11 @@ public class CustomTouchListener implements OnTouchListener {
                         flag2[0] = false;*/
                         //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.trakar));
                     }
-                }else if(keyCode == EYELASHCODE){
+                } else if (keyCode == EYELASHCODE) {
 
-                    if(eyelashFlag){
+                    if (eyelashFlag) {
 
-                        Log.d(TAG,"Get rid of eyelash");
+                        Log.d(action, "Get rid of eyelash");
                         nuktaFlag = false;
                         rafarFlag = false;
                         eyelashFlag = false;
@@ -7674,9 +7824,9 @@ public class CustomTouchListener implements OnTouchListener {
                         flag2[0] = false;*/
                         //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
 
-                    }else{
+                    } else {
 
-                        Log.d(TAG,"Enable eyelash");
+                        Log.d(action, "Enable eyelash");
                         nuktaFlag = false;
                         rafarFlag = false;
                         eyelashFlag = true;
@@ -7687,12 +7837,15 @@ public class CustomTouchListener implements OnTouchListener {
                         flag2[0] = false;*/
                         //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
                     }
-                }else if(keyCode == 138){
+                } else if (keyCode == 138 || keyCode == VOICETYPING) {
                     //startVoiceTyping();
                     nuktaFlag = false;
                     rafarFlag = false;
                     eyelashFlag = false;
                     rakarFlag = false;
+
+                    s2TIntent.setLanguage(Speech2TextIntent.LANGUAGE_HINDI);
+                    s2TIntent.startService();
 
                 }
 
@@ -7773,62 +7926,145 @@ public class CustomTouchListener implements OnTouchListener {
                 Editable editable = edittext.getText();
                 int start = edittext.getSelectionStart();
 
-                MediaPlayer mpBackspace = MediaPlayer.create(viewHandle.mHostActivity, R.raw.woosh);
-                mpBackspace.setVolume(higherVolume,lowerVolume);
+                MediaPlayer mpBackspace = MediaPlayer.create(viewHandle.mHostActivity, R.raw.woosh2);
+                mpBackspace.setVolume(higherVolume, lowerVolume);
                 MediaPlayer mpSpace = MediaPlayer.create(viewHandle.mHostActivity, R.raw.tick);
-                mpSpace.setVolume(lowerVolume,higherVolume);
+                mpSpace.setVolume(lowerVolume, higherVolume);
 
                 //three finger left swipe
-                if(l==9 && k==5){
-                    Log.d(SEQUENCE,"BKSpace");
-                    String new_string,delimiter = " ";
+                //TODO: was the array size more than the actual Kb row and column counts?
+                /*int l=0;
+                int k=0;*/
+
+               /* for (int i = 0; i < rowCount; i++) {
+                    for (int j = 0; j <columnCount; j++) {*/
+
+                //if (i == 1 && j == 5) {
+                if (viewHandle.kbLayout[l][k] == BACKSPACE && wordBackspaceFlag) {
+                            /*l = i;
+                            k = j;
+                            Log.d(GESTURE,"key:"+i+","+j);*/
+                    Log.d(action, "BKSpace:" + keyCode);
+                    String new_string, delimiter = " ";
 //                            EditText et1 = (EditText) mHostActivity.findViewById(R.id.editText1);
                     log_chars('丐');
-                    int lastindex ;
-                    if(edittext.getSelectionEnd()!=0){
-                        Log.d("selectionEnd",Integer.toString(edittext.getSelectionEnd()));
-                        String part_1 = s.substring(0,edittext.getSelectionEnd());
+                    int lastindex;
+                    if (edittext.getSelectionEnd() != 0) {
+                        Log.d(action, "selectionEnd: " + Integer.toString(edittext.getSelectionEnd()));
+                        String part_1 = s.substring(0, edittext.getSelectionEnd());
                         String part_2 = s.substring(edittext.getSelectionEnd());
-                        Log.d("parts", part_1 + "," + part_2);
+                        Log.d(action, "parts: " + part_1 + "," + part_2);
                         int len = part_1.length();
-                        Log.d("length", Integer.toString(len));
-                        String c = part_1.charAt(len-1)+"";
-                        Log.d("lastchar",c);
-                        if(c.equals(" ")){
-                            part_1 = s.substring(0,edittext.getSelectionEnd()-1);
-                            Log.d("part1",part_1);
+                        Log.d(action, "length:" + Integer.toString(len));
+                        String c = part_1.charAt(len - 1) + "";
+                        Log.d(action, "lastchar:" + c);
+                        if (c.equals(" ")) {
+                            part_1 = s.substring(0, edittext.getSelectionEnd() - 1);
+                            Log.d(action, "part1:" + part_1);
                         }
 
                         lastindex = part_1.lastIndexOf(delimiter);
-                        if(lastindex!=-1) {
+                        if (lastindex != -1) {
                             new_string = part_1.substring(0, lastindex);
-                            Log.d("new_string",new_string);
+                            Log.d(action, "new_string:" + new_string);
                             editable.clear();
                             editable.append(new_string + " " + part_2);
                             edittext.setSelection(new_string.length() + 1);
-                            Log.d("parts", part_1 + "," + part_2);
-                            Log.d("lastindex", String.valueOf(lastindex));
-                            mpBackspace.start();;
-                        }else{
+                            Log.d(action, "parts:" + part_1 + "," + part_2);
+                            Log.d(action, "lastindex:" + String.valueOf(lastindex));
+                            mpBackspace.start();
+                            ;
+                        } else {
                             editable.clear();
                             editable.append(part_2);
                             edittext.setSelection(0);
-                            Log.d("parts", part_2);
-                            Log.d("lastindex", String.valueOf(lastindex));
+                            Log.d(action, "parts:" + part_2);
+                            Log.d(action, "lastindex:" + String.valueOf(lastindex));
                             mpBackspace.start();
                         }
 
                     }
 
+                } else if (viewHandle.kbLayout[l][k] == SPACE) {
+
+                    Log.d(action, "Space:" + keyCode);
+                    viewHandle.keyCodelabel = "";
+                    int selectionEnd = edittext.getSelectionEnd();
+                    String text = edittext.getText().toString();
+                    if (selectionEnd >= 0) {
+                        // gives you the substring from start to the current cursor
+                        // position
+                        text = text.substring(0, selectionEnd);
+//                            speakOut_pitch(text);
+                    }
+                    String delimiter = " ";
+                    int lastDelimiterPosition = text.lastIndexOf(delimiter);
+                    String lastWord = lastDelimiterPosition == -1 ? text :
+                            text.substring(lastDelimiterPosition + delimiter.length());
+                    speakOut(lastWord, (float) 0.8);
+                    text = edittext.getText().toString();
+                    StringBuffer buffer = new StringBuffer(text);
+                    int cursor_position = edittext.getSelectionStart();
+                    buffer.insert(cursor_position, " ");
+                    edittext.setText(buffer.toString());
+                    edittext.setSelection(cursor_position + 1);
+                    mpSpace.start();
                 }
-                if(l==1 && k==6){
+              /*      }
+                }*/
+
+                if (l == 1 && k == 5) {
+                    Log.d(action, "BKSpace:" + keyCode);
+                    /*String new_string,delimiter = " ";
+//                            EditText et1 = (EditText) mHostActivity.findViewById(R.id.editText1);
+                    log_chars('丐');
+                    int lastindex ;
+                    if(edittext.getSelectionEnd()!=0){
+                        Log.d(action,"selectionEnd: "+Integer.toString(edittext.getSelectionEnd()));
+                        String part_1 = s.substring(0,edittext.getSelectionEnd());
+                        String part_2 = s.substring(edittext.getSelectionEnd());
+                        Log.d(action,"parts: "+ part_1 + "," + part_2);
+                        int len = part_1.length();
+                        Log.d(action,"length:"+ Integer.toString(len));
+                        String c = part_1.charAt(len-1)+"";
+                        Log.d(action,"lastchar:"+c);
+                        if(c.equals(" ")){
+                            part_1 = s.substring(0,edittext.getSelectionEnd()-1);
+                            Log.d(action,"part1:"+part_1);
+                        }
+
+                        lastindex = part_1.lastIndexOf(delimiter);
+                        if(lastindex!=-1) {
+                            new_string = part_1.substring(0, lastindex);
+                            Log.d(action,"new_string:"+new_string);
+                            editable.clear();
+                            editable.append(new_string + " " + part_2);
+                            edittext.setSelection(new_string.length() + 1);
+                            Log.d(action,"parts:"+ part_1 + "," + part_2);
+                            Log.d(action,"lastindex:"+ String.valueOf(lastindex));
+                            mpBackspace.start();;
+                        }else{
+                            editable.clear();
+                            editable.append(part_2);
+                            edittext.setSelection(0);
+                            Log.d(action,"parts:"+ part_2);
+                            Log.d(action,"lastindex:"+ String.valueOf(lastindex));
+                            mpBackspace.start();
+                        }
+
+                    }*/
+
+                }
+                //TODO: where is this set
+                if (l == 1 && k == 6) {
                     speakOut(s);
                     log_chars('丑');
+                    Log.d(action, "?Space:" + keyCode);
                 }
 
-                if ((l == 10 && (k >0 && k<=4)) || (l==9 && k==0)) {                     //space
-                    Log.d(SEQUENCE,"Space");
-                    viewHandle.keyCodelabel = "";
+                if ((l == 10 && (k > 0 && k <= 4)) || (l == 9 && k == 0)) {                     //space
+                    Log.d(action, "Space:" + keyCode);
+                    /*viewHandle.keyCodelabel = "";
                     int selectionEnd = edittext.getSelectionEnd();
                     String text = edittext.getText().toString();
                     if (selectionEnd >= 0) {
@@ -7848,7 +8084,7 @@ public class CustomTouchListener implements OnTouchListener {
                     buffer.insert(cursor_position, " ");
                     edittext.setText(buffer.toString());
                     edittext.setSelection(cursor_position+1);
-                    mpSpace.start();
+                    mpSpace.start();*/
 
 
                 } else if (l == 9 && k == 3) {
@@ -7859,63 +8095,119 @@ public class CustomTouchListener implements OnTouchListener {
                     int selectionEnd = edittext.getSelectionEnd();
                     if (selectionEnd != 0) edittext.setSelection(selectionEnd - 1);
                     speakOut(getLastword());
+                    Log.d(action, "arrow left");
 
                 } else if (l == 9 && k == 4) {
 
                     int selectionEnd = edittext.getSelectionEnd();
-                    if(selectionEnd != s.length() )edittext.setSelection(selectionEnd+1);
+                    if (selectionEnd != s.length()) edittext.setSelection(selectionEnd + 1);
                     speakOut(getLastword());
+                    Log.d(action, "arrow right");
                 }
-                if ((l == 0 || l==1) && k == 5) {
-                    Log.d(SEQUENCE,"one bkSpace");
+                if ((l == 0 || l == 1) && k == 5) {
+                    Log.d(action, "one bkSpace");
 
                     Log.d("length of edit text", Integer.toString(s.length()));
                     String str = edittext.getText().toString();
-                    String str1,str2;
-                    int pos=0;
+                    String str1, str2;
+                    int pos = 0;
                     if (str.length() != 0) {
 
 //                            mp.setVolume(2,3);
-                        Log.d("selection", String.valueOf(edittext.getSelectionStart())+","+String.valueOf(str.length()));
+                        Log.d("selection", String.valueOf(edittext.getSelectionStart()) + "," + String.valueOf(str.length()));
 
-                        if(edittext.getSelectionStart() == str.length() &&  edittext.getSelectionStart()!=0){
-                            char lastchar = str.charAt(edittext.getSelectionStart()-1);
+                        if (edittext.getSelectionStart() == str.length() && edittext.getSelectionStart() != 0) {
+                            char lastchar = str.charAt(edittext.getSelectionStart() - 1);
                             speakOut(String.valueOf(lastchar) + " deleted", 0.8f);
 
-                            str = str.substring(0,str.length()-1);
-                            pos = edittext.getSelectionStart()-1;
+                            str = str.substring(0, str.length() - 1);
+                            pos = edittext.getSelectionStart() - 1;
                             edittext.setText(str);
                             edittext.setSelection(pos);
 
-                        }else if(edittext.getSelectionStart() < str.length() &&  edittext.getSelectionStart()!=0){
-                            char lastchar = str.charAt(edittext.getSelectionStart()-1);
-                            speakOut(String.valueOf(lastchar)+" deleted", 0.8f);
+                        } else if (edittext.getSelectionStart() < str.length() && edittext.getSelectionStart() != 0) {
+                            char lastchar = str.charAt(edittext.getSelectionStart() - 1);
+                            speakOut(String.valueOf(lastchar) + " deleted", 0.8f);
                             mpBackspace.start();
-                            str1 = str.substring(0,(edittext.getSelectionStart()-1));
+                            str1 = str.substring(0, (edittext.getSelectionStart() - 1));
                             str2 = str.substring((edittext.getSelectionStart()));
-                            str = str1+str2;
+                            str = str1 + str2;
 
-                            pos = edittext.getSelectionStart()-1;
+                            pos = edittext.getSelectionStart() - 1;
                             Log.d("selection1", String.valueOf(edittext.getSelectionStart()));
-                            if(edittext.getSelectionStart()!=0){
+                            if (edittext.getSelectionStart() != 0) {
                                 edittext.setText(str);
-                                edittext.setSelection(pos);}
+                                edittext.setSelection(pos);
+                            }
                         }
 
 
                     }
 
                 }
-                if(l==10 && k==6){
+                if (l == 10 && k == 6) {
 
                 }
-                if (tri_touch==false && multi_touch == false && action_down_flag && y>0) {     //condition for lift to type model
+                if (tri_touch == false && multi_touch == false && action_down_flag && y > 0) {     //condition for lift to type model
 
-                    Log.d(TAG,"?condition for lift to type model");
+                    Log.d(TAG, "?condition for lift to type model");
 
                     viewHandle.speakOut_pitch(viewHandle.keyCodelabel);
                     action_down_flag = false;
-                    editable.insert(start, viewHandle.keyCodelabel);
+
+                    //TODO: patch
+                    /*if(viewHandle.keyCodelabel!=null)
+                        editable.insert(start, viewHandle.keyCodelabel);*/
+
+                    switch (keyCode) {
+
+                        //anchor keys
+                        case 1:
+                        case 5:
+                        case 18:
+                        case 39:
+                        case 136:
+
+                            //myVib.vibrate(COUNT_DOWN_INTERVAL);
+                            //speakOut(keyLabel);
+                            editable.insert(start, viewHandle.keyCodeInput);
+                            break;
+                        case BACKSPACE:
+                            //key_touch(rowNo,columnNo,"delete",vibrateDuration);
+                            break;
+                        case LEFTARROW:
+                            //key_touch(rowNo,columnNo,"move one left",vibrateDuration);
+                            break;
+                        case RIGHTARROW:
+                            //key_touch(rowNo,columnNo,"move one right",vibrateDuration);
+                            break;
+                        case SPACE:
+                            //key_touch(rowNo,columnNo,"Space key",vibrateDuration);
+                            break;
+                        case ENTER:
+                            //key_touch(rowNo,columnNo,"Enter key",vibrateDuration);
+                            break;
+                        case VOICETYPING:
+                        case 138:
+                            //key_touch(rowNo,columnNo,"Start voice typing",vibrateDuration);
+                            break;
+                        case LANGUAGE_EN:
+                            //key_touch(rowNo,columnNo,"Switch to English keyboard",vibrateDuration);
+                            break;
+                        case SETTINGS:
+                            //key_touch(rowNo,columnNo,"Go to keyboard settings",vibrateDuration);
+                            break;
+                        case SHIFT:
+                            //key_touch(rowNo,columnNo,"Shift key",vibrateDuration);
+                            break;
+
+                        default:
+                            //myVib.vibrate(vibrateDuration);
+                            //speakOut(keyLabel);
+                            if (viewHandle.keyCodeInput != null)
+                                editable.insert(start, viewHandle.keyCodeInput);
+                    }
+
 //                            keyCodelabel = "";
 //                            int selectionEnd = edittext.getSelectionEnd();
 //                            String text = edittext.getText().toString();
@@ -7946,10 +8238,10 @@ public class CustomTouchListener implements OnTouchListener {
                     }
                     action_down_flag = false;
 
-                } else if (multi_touch == true && viewHandle.keyCodelabel != null && viewHandle.radius > viewHandle.mInnerRadius) {
+                } else if (multi_touch == true && viewHandle.keyCodeInput != null && viewHandle.radius > viewHandle.mInnerRadius) {
 
                     int new_start = edittext.getSelectionStart();
-                    if (viewHandle.keyCodelabel.equals("\u0905")) {
+                    if (viewHandle.keyCodeInput.equals("\u0905")) {
                         editable.insert(new_start, viewHandle.vowels_aah[viewHandle.arc]);
                         speakOut_pitch(viewHandle.vowels_aah[viewHandle.arc]);
 //                                keyCodelabel = "";
@@ -7967,7 +8259,7 @@ public class CustomTouchListener implements OnTouchListener {
 //                                        text.substring(lastDelimiterPosition + delimiter.length());
 //                                speakOut_pitch(lastWord);
 
-                    } else if (viewHandle.keyCodelabel.equals("ृ")) {
+                    } else if (viewHandle.keyCodeInput.equals("ृ")) {
                         editable.insert(new_start, viewHandle.vowes_uuh[viewHandle.arc]);
                         speakOut_pitch(viewHandle.vowes_uuh[viewHandle.arc]);
 //                                keyCodelabel = "";
@@ -7985,7 +8277,7 @@ public class CustomTouchListener implements OnTouchListener {
 //                                        text.substring(lastDelimiterPosition + delimiter.length());
 //                                speakOut_pitch(lastWord);
 
-                    } else if (viewHandle.keyCodelabel.equals("ा")) {
+                    } else if (viewHandle.keyCodeInput.equals("ा")) {
                         editable.insert(new_start, viewHandle.vowels[viewHandle.arc]);
                         speakOut_pitch(viewHandle.vowels[viewHandle.arc]);
 //                                keyCodelabel = "";
@@ -8005,8 +8297,8 @@ public class CustomTouchListener implements OnTouchListener {
 
                     } else {
 
-                        editable.insert(new_start, viewHandle.keyCodelabel + viewHandle.vowels[viewHandle.arc]);
-                        speakOut_pitch(viewHandle.keyCodelabel + viewHandle.vowels[viewHandle.arc]);
+                        editable.insert(new_start, viewHandle.keyCodeInput + viewHandle.vowels[viewHandle.arc]);
+                        speakOut_pitch(viewHandle.keyCodeInput + viewHandle.vowels[viewHandle.arc]);
 //                                keyCodelabel = "";
 //                                int selectionEnd = edittext.getSelectionEnd();
 //                                String text = edittext.getText().toString();
@@ -8030,15 +8322,14 @@ public class CustomTouchListener implements OnTouchListener {
                     } else if (l > 0 && l < 10 && rakarFlag) {
                         rakarFlag = false;
                         //viewHandle.count_trakar = 1;
-                        viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
+                        //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
                     } else if (l > 0 && l < 10 && rafarFlag) {
                         rafarFlag = false;
                         //viewHandle.count_rafar = 1;
-                        viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
+                        //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
                     }
 
                 }
-
 
 
                 //setting touch flags to default values
@@ -8053,29 +8344,31 @@ public class CustomTouchListener implements OnTouchListener {
                 resetFlagArray(0);
 
                 viewHandle.keyCodelabel = "";
+                viewHandle.keyCodeInput = "";
+                keyCode = 0;
                 multi_touch = false;
-                tri_touch =false;
+                tri_touch = false;
                 navigator_flag = false;
-                action_down_flag= false;
+                action_down_flag = false;
                 PROXIMITY_CHECK = false;
-                PREV_COORDINATE =false;
+                PREV_COORDINATE = false;
                 break;
 
             case MotionEvent.ACTION_POINTER_UP:
-                Log.d(TAG,"Action pointer UP");
+                Log.d(TAG, "Action pointer UP");
                 View focusCurrent1 = viewHandle.mHostActivity.getWindow().getCurrentFocus();
                 EditText edittext1 = (EditText) focusCurrent1;
                 String s1 = edittext1.getText().toString();
                 Editable editable1 = edittext1.getText();
                 int start1 = edittext1.getSelectionStart();
 
-                if (event.getPointerId(pointerIndex) != 0 && viewHandle.radius > viewHandle.mInnerRadius && tri_touch == false && multi_touch && navigator_flag==false) {
-                    editable1.insert(start1, viewHandle.keyCodelabel + viewHandle.vowels[viewHandle.arc]);
-                    viewHandle.speakOut_pitch(viewHandle.keyCodelabel + viewHandle.vowels[viewHandle.arc]);
+                if (event.getPointerId(pointerIndex) != 0 && viewHandle.radius > viewHandle.mInnerRadius && tri_touch == false && multi_touch && navigator_flag == false) {
+                    editable1.insert(start1, viewHandle.keyCodeInput + viewHandle.vowels[viewHandle.arc]);
+                    viewHandle.speakOut_pitch(viewHandle.keyCodeInput + viewHandle.vowels[viewHandle.arc]);
 
                     if (nuktaFlag || rakarFlag || rafarFlag || eyelashFlag) {
 
-                        viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
+                        //viewHandle.mKeyboardView.setKeyboard(new Keyboard(viewHandle.mHostActivity, R.xml.layout2));
                         nuktaFlag = false;
                         rakarFlag = false;
                         rafarFlag = false;
@@ -8088,9 +8381,9 @@ public class CustomTouchListener implements OnTouchListener {
                 break;
 
         }
-        if (event.getPointerCount() < 2 && pointerId == 0){
+        if (event.getPointerCount() < 2 && pointerId == 0) {
             multi_touch = false;
-            navigator_flag=false;
+            navigator_flag = false;
         }
         viewHandle.invalidate();
         return true;
@@ -8098,113 +8391,158 @@ public class CustomTouchListener implements OnTouchListener {
 
     private void long_backspace() {
 
-        if(viewHandle.action_up == false){
+        if (viewHandle.action_up == false) {
             View focusCurrent = viewHandle.mHostActivity.getWindow().getCurrentFocus();
             EditText edittext = (EditText) focusCurrent;
             //edittext.setText("");
-            Log.d(SEQUENCE,"Supposed to clear the text box on long hold on backspace.");
-            MediaPlayer mpBackspace = MediaPlayer.create(viewHandle.mHostActivity, R.raw.woosh);
-            mpBackspace.setVolume(higherVolume,lowerVolume);
+            Log.d(SEQUENCE, "Supposed to clear the text box on long hold on backspace.");
+            MediaPlayer mpBackspace = MediaPlayer.create(viewHandle.mHostActivity, R.raw.woosh2);
+            mpBackspace.setVolume(higherVolume, lowerVolume);
             mpBackspace.start();
         }
     }
 
     /************
-     * Set the keycode, key label and sample word for the key
-     * @return
+     * Set the keycode, key label and sample word for the key and the active flag
+     * @return keyCode of current key
      */
-    private int getKeyPosition(){
+    private int getKeyPosition() {
 
         //Get the size of each key
-        float rowHeight = height/rowCount;
-        float columnWidth = width/columnCount;
+        float rowHeight = height / rowCount;
+        float columnWidth = width / columnCount;
 
         //Figure out the row and column the current (x,y) pair belong to
-        rowNo = (int)Math.floor(y*1.0/rowHeight);
-        columnNo = (int)Math.floor(x/columnWidth);
-        int keyCode=0;
+        rowNo = (int) Math.floor(y * 1.0 / rowHeight);
+        columnNo = (int) Math.floor(x / columnWidth);
+        int keyCode = 0;
 
 
-        Log.d(POSITION,"Row, col:"+rowNo+", "+columnNo);
-        Log.d(SEQUENCE,"Active on key in - (row, col): ("+rowNo+", "+columnNo+")");
+        //TODO: check why the column no is -1 sometimes
+        Log.d(POSITION, "Row, col:" + rowNo + ", " + columnNo);
+        Log.d(SEQUENCE, "Active on key in - (row, col): (" + rowNo + ", " + columnNo + ")");
 
         //Log.d(POSITION,"Max row count: "+viewHandle.kbLayout.length+", Max column count:"+viewHandle.kbLayout[0].length);
 
         //If the x,y belong to the keyboard grid.
-        Log.d(SEQUENCE, "Row details: "+rowNo+","+ viewHandle.kbLayout.length +","+ columnNo +","+ viewHandle.kbLayout[rowNo].length);
-        if(rowNo < viewHandle.kbLayout.length && columnNo < viewHandle.kbLayout[rowNo].length) {
+        Log.d(SEQUENCE, "Row details: " + rowNo + "," + viewHandle.kbLayout.length + "," + columnNo + "," + viewHandle.kbLayout[rowNo].length);
+        if (rowNo < viewHandle.kbLayout.length && columnNo < viewHandle.kbLayout[rowNo].length) {
 
-            Log.d(SEQUENCE,"Within keyboard bounds");
+            Log.d(SEQUENCE, "Within keyboard bounds");
 
             //useful if rafar etc are modal keys
-            if(rafarFlag)
+            /*if(rafarFlag)
                 keyCode = viewHandle.kbLayout[rowNo][columnNo];//keyCode = viewHandle.kbLayoutRafar[rowNo][columnNo];
             else if(nuktaFlag)
                 keyCode = viewHandle.kbLayout[rowNo][columnNo];//keyCode = viewHandle.kbLayoutNukta[rowNo][columnNo];
             else if(rakarFlag)
                 keyCode = viewHandle.kbLayout[rowNo][columnNo];//keyCode = viewHandle.kbLayoutTrakar[rowNo][columnNo];
             else
-                keyCode = viewHandle.kbLayout[rowNo][columnNo];
+                keyCode = viewHandle.kbLayout[rowNo][columnNo];*/
 
-            Log.d(POSITION, "Needle:"+keyCode);
-            Log.d(SEQUENCE,"Key code:"+keyCode);
+            keyCode = viewHandle.kbLayout[rowNo][columnNo];
+
+            Log.d(POSITION, "Needle:" + keyCode);
+            Log.d(SEQUENCE, "Key code:" + keyCode);
 
             //look up label and sample words
-            switch(keyCode) {
+            keyInput = "";
+            viewHandle.showChakra = false;
+            //TODOs: Move these labels to strings file
+            switch (keyCode) {
 
                 case LEFTARROW:
                     //keyLabel = "left arrow key";
-                    keyLabel = "";
-                    sampleWord = "move left by one character";
+                    keyLabel = viewHandle.getResources().getString(R.string.leftArrowShort);
+                    sampleWord = viewHandle.getResources().getString(R.string.leftArrowLong);
 
                     break;
                 case RIGHTARROW:
                     //keyLabel = "right arrow key";
-                    keyLabel = "";
-                    sampleWord = "move right by one character"; //moved right by one character
+                    keyLabel = viewHandle.getResources().getString(R.string.rightArrowShort);
+                    sampleWord = viewHandle.getResources().getString(R.string.rightArrowLong);
+                    //moved right by one character
 
                     break;
                 case BACKSPACE:
-                    keyLabel = "";
-                    sampleWord = "backspace key"; //moved right by one character
+                    keyLabel = viewHandle.getResources().getString(R.string.backspaceShort);
+                    sampleWord = viewHandle.getResources().getString(R.string.backspaceLong);
                     break;
 
                 case SPACE:
-                    keyLabel = "";
-                    sampleWord = "space key"; //moved right by one character
+                    keyLabel = viewHandle.getResources().getString(R.string.spaceShort);
+                    keyInput = "\u0020";
+                    sampleWord = viewHandle.getResources().getString(R.string.spaceLong);
                     break;
-
                 case ENTER:
-                    keyLabel = "";
-                    sampleWord = "go to new line"; //moved right by one character
+                    keyLabel = viewHandle.getResources().getString(R.string.enterShort);
+                    keyInput = "\\u000a";
+                    sampleWord = viewHandle.getResources().getString(R.string.enterLong);
+                    break;
+                case VOICETYPING:
+                    keyLabel = viewHandle.getResources().getString(R.string.voiceTypingShort);
+                    sampleWord = viewHandle.getResources().getString(R.string.voiceTypingLong);
+                    break;
+                case SETTINGS:
+                    keyLabel = viewHandle.getResources().getString(R.string.settingsShort);
+                    sampleWord = viewHandle.getResources().getString(R.string.settingsLong);
+                    break;
+                case LANGUAGE_EN:
+                    keyLabel = viewHandle.getResources().getString(R.string.languageShort);
+                    sampleWord = viewHandle.getResources().getString(R.string.languageLong);
+                    break;
+                case SHIFT:
+                    keyLabel = viewHandle.getResources().getString(R.string.shiftShort);
+                    sampleWord = viewHandle.getResources().getString(R.string.shiftLong);
                     break;
 
-                    default:
-                 for (int i = 0; i < languageObjects.nKeys; i++) {
+                default:
+                    for (int i = 0; i < languageObjects.nKeys; i++) {
 
-                    if (keyCode == languageObjects.myKey.get(i).code) {
+                        if (keyCode == languageObjects.myKey.get(i).code) {
 
-                        keyLabel = languageObjects.myKey.get(i).label;
-                        sampleWord = languageObjects.myKey.get(i).exampleWord;
-                        Log.d(POSITION, "Label:" + keyLabel);
-                        Log.d(POSITION, "Speak:" + keyLabel);
-                        //viewHandle.keyCodelabel = keyLabel;
-                        //speakOut(keyLabel);
-                        //giveWordFeedback(sampleWord);
+                            keyInput = languageObjects.myKey.get(i).label;
+                            sampleWord = languageObjects.myKey.get(i).exampleWord;
+                            viewHandle.showChakra = languageObjects.myKey.get(i).showChakra;
 
+                            if (keyCode == RAFARCODE)
+                                keyLabel = viewHandle.getResources().getString(R.string.rafar);
+                            else if (keyCode == EYELASHCODE)
+                                keyLabel = viewHandle.getResources().getString(R.string.eyelash);
+                            else if (keyCode == RAKARCODE)
+                                keyLabel = viewHandle.getResources().getString(R.string.rakar);
+                            else if (keyCode == NUKTACODE)
+                                keyLabel = viewHandle.getResources().getString(R.string.nukta);
+                            else if (keyCode == ANUSWAR)
+                                keyLabel = viewHandle.getResources().getString(R.string.anuswar);
+                            else if (keyCode == AAKAR)
+                                keyLabel = viewHandle.getResources().getString(R.string.aakar);
+                            else if (keyCode == CHANDRABINDU)
+                                keyLabel = viewHandle.getResources().getString(R.string.chandrabindu);
+                            else if (keyCode == RUKAR)
+                                keyLabel = viewHandle.getResources().getString(R.string.rukar);
+                            else
+                                keyLabel = keyInput;
+
+                            Log.d(POSITION, "Label:" + keyLabel);
+                            Log.d(POSITION, "Speak:" + keyLabel);
+                            //viewHandle.keyCodelabel = keyLabel;
+                            //speakOut(keyLabel);
+                            //giveWordFeedback(sampleWord);
+
+                        }
                     }
-                }
-                break;
+                    break;
             }
-            Log.d(SEQUENCE,"Key label:"+keyLabel+", sample word:"+sampleWord);
+            Log.d(SEQUENCE, "Key input:" + keyInput + ", Key label:" + keyLabel + ", sample word:" + sampleWord);
 
             //Set flags
             //int zero = 0;
             //Arrays.fill(flag,zero);
 
-            //Set the currently active key
+           /* //Set the currently active key
             resetFlagArray(0);
-            flag[rowNo][columnNo]= 1;
+            flag[rowNo][columnNo]= 1;*/
 
             /*for (int i = 0; i < rowCount; i++) {
                 for (int j = 0; j < columnCount; j++) {
@@ -8216,8 +8554,8 @@ public class CustomTouchListener implements OnTouchListener {
                 }
             }*/
 
-        }else{
-            Log.d(SEQUENCE,"!! Not a key from the grid. !!");
+        } else {
+            Log.d(SEQUENCE, "!! Not a key from the grid. !!");
         }
 
         //Handle modal flags
@@ -8255,27 +8593,27 @@ public class CustomTouchListener implements OnTouchListener {
 
         } //Handle modal flags*/
 
-        Log.d(SEQUENCE,"Key code:"+keyCode);
-        Log.d(SEQUENCE,"Modal key check: Key label:"+keyLabel+", sample word:"+sampleWord);
+        Log.d(SEQUENCE, "Key code:" + keyCode);
+        Log.d(SEQUENCE, "Modal key check: Key label:" + keyLabel + ", sample word:" + sampleWord);
 
         //if(sampleWord!=null && sampleWord.length()>0)
-        giveWordFeedback(sampleWord,keyLabel);
-
+        //giveWordFeedback(sampleWord,keyLabel);
+        setActiveKeyFlag(rowNo, columnNo);
         return keyCode;
 
     }
 
-    public String getKeyLabel(int code){
+    public String getKeyLabel(int code) {
         String label = "";
 
-        for(int i=0;i<languageObjects.nKeys;i++){
+        for (int i = 0; i < languageObjects.nKeys; i++) {
 
-            if(code == languageObjects.myKey.get(i).code){
-                Log.d(POSITION, "Label:"+languageObjects.myKey.get(i).label);
-                Log.d(POSITION, "Speak:"+languageObjects.myKey.get(i).label);
+            if (code == languageObjects.myKey.get(i).code) {
+                Log.d(POSITION, "Label:" + languageObjects.myKey.get(i).label);
+                Log.d(POSITION, "Speak:" + languageObjects.myKey.get(i).label);
                 label = languageObjects.myKey.get(i).label;
 
-            }else{
+            } else {
                 //Log.d(POSITION,"Code:"+languageObjects.myKey.get(i).code);
             }
         }
@@ -8284,16 +8622,16 @@ public class CustomTouchListener implements OnTouchListener {
 
     }
 
-    private void resetFlagArray(int fillValue){
+    private void resetFlagArray(int fillValue) {
 
         for (int i = 0; i < rowCount; i++) {
             for (int j = 0; j < columnCount; j++) {
-                    flag[i][j] = fillValue;
-                }
+                flag[i][j] = fillValue;
             }
+        }
     }
 
-    public void startVoiceTyping(String layoutFile){
+    public void startVoiceTyping(String layoutFile) {
 
            /* if(layoutFile.compareTo("voice")==0){
 
@@ -8384,75 +8722,74 @@ public class CustomTouchListener implements OnTouchListener {
 
     }
 
-    private void handleExploreByTouch(){
+    private void handleExploreByTouch() {
 
         int r, s;
         r = rowNo; //rowNo+1;
         s = columnNo;
-        Log.d(SEQUENCE, "Handle explore by touch:"+keyCode+", Proximity check:"+PROXIMITY_CHECK);
+        Log.d(SEQUENCE, "Handle explore by touch:" + keyCode + ", Proximity check:" + PROXIMITY_CHECK);
 
         //if(keyCode == ENTER || keyCode == SPACE || keyCode == LEFTARROW || keyCode == RIGHTARROW ||keyCode == VOICETYPING || keyCode == SHIFT || keyCode == SETTINGS || keyCode == LANGUAGE_EN){
 
-            //|| keyCode == RAFARCODE || keyCode == RAKARCODE || keyCode == EYELASHCODE
+        //|| keyCode == RAFARCODE || keyCode == RAKARCODE || keyCode == EYELASHCODE
 
-            //Log.d(SEQUENCE,"On one of the function keys.");
+        //Log.d(SEQUENCE,"On one of the function keys.");
 
-            if (PROXIMITY_CHECK) {
-                proximity_check(r,s);
+        if (PROXIMITY_CHECK) {
+            proximity_check(r, s);
 
-            } else {
-                //key_touch(r,s,label,vibrateDuration);
-                switch(keyCode){
+        } /*else {*/
+        //key_touch(r,s,label,vibrateDuration);
+        //TODO: quick fix for no feedback druing move
+        switch (keyCode) {
 
-                    //anchor keys
-                    case 1:
-                    case 5:
-                    case 18:
-                    case 39:
-                    case 136:
-                    myVib.vibrate(COUNT_DOWN_INTERVAL);
-                    speakOut(keyLabel);
-                    Log.d(SEQUENCE, "One of the corner keys");
-                    break;
-                   case BACKSPACE:
-                        key_touch(rowNo,columnNo,"delete",vibrateDuration);
-                        break;
-                    case LEFTARROW:
-                        key_touch(rowNo,columnNo,"left arrow",vibrateDuration);
-                        break;
-                    case RIGHTARROW:
-                        key_touch(rowNo,columnNo,"right arrow",vibrateDuration);
-                        break;
-                    case SPACE:
-                        key_touch(rowNo,columnNo,"Space key",vibrateDuration);
-                        break;
-                    case ENTER:
-                        key_touch(rowNo,columnNo,"Enter key",vibrateDuration);
-                        break;
-                    case VOICETYPING:
-                        key_touch(rowNo,columnNo,"Start voice typing",vibrateDuration);
-                        break;
-                    case LANGUAGE_EN:
-                        key_touch(rowNo,columnNo,"Switch to English keyboard",vibrateDuration);
-                        break;
-                    case SETTINGS:
-                        key_touch(rowNo,columnNo,"Go to keyboard settings",vibrateDuration);
-                        break;
-                    case SHIFT:
-                        key_touch(rowNo,columnNo,"Shift key",vibrateDuration);
-                        break;
-                    default:
-                        myVib.vibrate(vibrateDuration);
-                        speakOut(keyLabel);
-                        Log.d(SEQUENCE, "One of the regular keys");
+            //anchor keys
+            case 1:
+            case 5:
+            case 18:
+            case 39:
+            case 136:
+                myVib.vibrate(COUNT_DOWN_INTERVAL);
+                speakOut(keyLabel);
+                Log.d(SEQUENCE, "One of the corner keys");
+                break;
+            case BACKSPACE:
+                key_touch(rowNo, columnNo, "delete", vibrateDuration);
+                break;
+            case LEFTARROW:
+                key_touch(rowNo, columnNo, "left arrow", vibrateDuration);
+                break;
+            case RIGHTARROW:
+                key_touch(rowNo, columnNo, "right arrow", vibrateDuration);
+                break;
+            case SPACE:
+                key_touch(rowNo, columnNo, "Space key", vibrateDuration);
+                break;
+            case ENTER:
+                key_touch(rowNo, columnNo, "Enter key", vibrateDuration);
+                break;
+            case VOICETYPING:
+                key_touch(rowNo, columnNo, "Start voice typing", vibrateDuration);
+                break;
+            case LANGUAGE_EN:
+                key_touch(rowNo, columnNo, "Switch to English keyboard", vibrateDuration);
+                break;
+            case SETTINGS:
+                key_touch(rowNo, columnNo, "Go to keyboard settings", vibrateDuration);
+                break;
+            case SHIFT:
+                key_touch(rowNo, columnNo, "Shift key", vibrateDuration);
+                break;
+            default:
+                myVib.vibrate(vibrateDuration);
+                speakOut(keyLabel);
+                Log.d(SEQUENCE, "One of the regular keys");
 
 
+        }
+        /*}*/
 
-
-                }
-            }
-
-            //return;
+        //return;
         //}
 
         if (PROXIMITY_CHECK) {
@@ -8468,7 +8805,7 @@ public class CustomTouchListener implements OnTouchListener {
                     for (int j = 0; j < columnCount; j++) {
                         if (P_CHECK_FLAGS[i][j] == 1) {
                             PREV_COORDINATE = true;
-                            Log.d(SEQUENCE, "Check flag set for another key:("+i+","+j+")");
+                            Log.d(SEQUENCE, "Check flag set for another key:(" + i + "," + j + ")");
                         }
                     }
                 }
@@ -8533,81 +8870,93 @@ public class CustomTouchListener implements OnTouchListener {
                     viewHandle.keyCodelabel = "\u0915";
 
                 }*/
-                speakOut(keyLabel);
-                viewHandle.keyCodelabel = keyLabel;
+            speakOut(keyLabel);
+            viewHandle.keyCodelabel = keyLabel;
 
-                touchdX1 = x;
-                touchdY1 = y;
-                CountDownTimer timer = new CountDownTimer(COUNT_DOWN_TIME , COUNT_DOWN_INTERVAL ) {
+            touchdX1 = x;
+            touchdY1 = y;
+            CountDownTimer timer = new CountDownTimer(COUNT_DOWN_TIME, COUNT_DOWN_INTERVAL) {
 
-                    public void onTick(long millisUntilFinished) {
+                public void onTick(long millisUntilFinished) {
 
-                        PROXIMITY_CHECK = true;
-                    }
+                    PROXIMITY_CHECK = true;
+                }
 
-                    public void onFinish() {
-                        //Done timer time out.
-                        //if (flag[1][0] == 1) {
-                        if(sampleWord!=null)
-                            speakOut(sampleWord);
-                        //}
-                        //PROXIMITY_CHECK = true;
-                        //Log.i("Proximity: ", String.valueOf(PROXIMITY_CHECK));
-                        //Log.i("Countdown Timer:", "TimeOut");
-                    }
-                }.start();
+                public void onFinish() {
+                    //Done timer time out.
+                    //if (flag[1][0] == 1) {
+                    if (sampleWord != null)
+                        speakOut(sampleWord);
+                    //}
+                    //PROXIMITY_CHECK = true;
+                    //Log.i("Proximity: ", String.valueOf(PROXIMITY_CHECK));
+                    //Log.i("Countdown Timer:", "TimeOut");
+                }
+            }.start();
 
-                //Intialising the flag value of this column to 1 and rest of the keys to 0
-                //TODO: See if we can get rid of the flag array altogether
-                for (int i = 0; i < rowCount; i++) {
-                    for (int j = 0; j < columnCount; j++) {
-                        if (i == r && j == s) {
-                            flag[i][j] = 1;
-                        } else {
-                            flag[i][j] = 0;
-                        }
+            //Intialising the flag value of this column to 1 and rest of the keys to 0
+            //TODO: See if we can get rid of the flag array altogether
+            for (int i = 0; i < rowCount; i++) {
+                for (int j = 0; j < columnCount; j++) {
+                    if (i == r && j == s) {
+                        flag[i][j] = 1;
+                    } else {
+                        flag[i][j] = 0;
                     }
                 }
-                    resetFlagArray(0);
-                    flag[r][s] = 1;
+            }
+            resetFlagArray(0);
+            flag[r][s] = 1;
 
-                switch(keyCode) {
+            switch (keyCode) {
 
-                    //anchor keys
-                    case 1:
-                    case 5:
-                    case 18:
-                    case 39:
-                    case 136:
-                        myVib.vibrate(COUNT_DOWN_INTERVAL);
-                        break;
-                    default:
-                        myVib.vibrate(vibrateDuration);
-                }
-                //myVib.vibrate(COUNT_DOWN_INTERVAL);
+                //anchor keys
+                case 1:
+                case 5:
+                case 18:
+                case 39:
+                case 136:
+                    myVib.vibrate(COUNT_DOWN_INTERVAL);
+                    break;
+                default:
+                    myVib.vibrate(vibrateDuration);
+            }
+            //myVib.vibrate(COUNT_DOWN_INTERVAL);
 
-                Log.d("keycodelabel", viewHandle.keyCodelabel);
-                //Log.d("key", "1");
+            Log.d("keycodelabel", viewHandle.keyCodelabel);
+            //Log.d("key", "1");
             //}
         }
     }
 
-    private void giveWordFeedback(String word, String label){
+    /****
+     *
+     * Cancels any existing timer that is active.
+     * Sets a timer for giving word feedback.
+     * When timer times out if the user is still on the same key, word feedback is given.
+     * @param word
+     * @param label
+     */
+    //TODO:Is the delay before giving word feedback optimal?
+    private void giveWordFeedback(String word, String label) {
 
         //flag[1][0]==1
         final String exWord = word;
         final String keyLabel = label;
         final int keyPressed = keyCode;
-        Log.d(POSITION,"Give word feedback:"+word);
-        Log.d(SEQUENCE,"User stays longer give feedback:"+word);
+        Log.d(POSITION, "Give word feedback:" + word);
+        Log.d(SEQUENCE, "User stays longer give feedback:" + word);
 
-
-        CountDownTimer timer = new CountDownTimer(COUNT_DOWN_TIME , COUNT_DOWN_INTERVAL ) {
+        if (timer != null) {
+            Log.d(SEQUENCE, "Cancel existing timer");
+            timer.cancel();
+        }
+        timer = new CountDownTimer(COUNT_DOWN_TIME, COUNT_DOWN_INTERVAL) {
 
             int activatorKeyCode = keyCode;
 
             public void onTick(long millisUntilFinished) {
-                PROXIMITY_CHECK=true;
+                PROXIMITY_CHECK = true;
                 //Log.d("proximity","Check is true for 1 0");
                 //Log.d("Countdown Timer: ", "seconds remaining: " + millisUntilFinished / 1000);
             }
@@ -8615,20 +8964,23 @@ public class CustomTouchListener implements OnTouchListener {
             public void onFinish() {
                 //Done timer time out.
                 //if(flag[1][0]==1){
-                if(activatorKeyCode == keyCode) {
+                if (activatorKeyCode == keyCode) {
 
-                    Log.d(SEQUENCE,"User still on the same key give feedback:"+exWord);
-                    switch (keyPressed) {
+                    Log.d(SEQUENCE, "User still on the same key give feedback:" + exWord);
+                    switch (activatorKeyCode) {
 
-                        case 400:
-                            long_backspace();
+                        case BACKSPACE:
+                            //speakOut("all text deleted");
+                            if (exWord != null)
+                                speakOut(exWord);
+                            //long_backspace();
                             break;
                         default:
                             if (exWord != null)
                                 speakOut(exWord);
                     }
-                }else{
-                    Log.d(SEQUENCE,"Key no longer active");
+                } else {
+                    Log.d(SEQUENCE, "Key no longer active. No word feedback needed.");
                 }
 
                 //}

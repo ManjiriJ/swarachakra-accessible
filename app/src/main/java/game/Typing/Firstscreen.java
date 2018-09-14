@@ -1,12 +1,13 @@
 package game.Typing;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
+//import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class Firstscreen extends ActionBarActivity implements OnClickListener,OnItemClickListener {
+public class Firstscreen extends Activity implements OnClickListener,OnItemClickListener {
 
 	public String[] titles;
 	public Integer[] images;

@@ -140,7 +140,47 @@
 
     <string name="livtoken">71fcaf2fbb09da0cfff4113e0daae662d4c175c0</string>
 
-    <string name="a2325">कमळ</string>
+    <string name="rafar">रफार</string>
+    <string name="eyelash">वाऱ्याचा र</string>
+    <string name="nukta">नुक्ता</string>
+    <string name="rakar">रकार</string>
+
+    <string name="anuswar">अनुस्वार</string>
+    <string name="chandrabindu">चंद्रबिंदु</string>
+    <string name="aakar">आकार</string>
+    <string name="rukar">ऋकार</string>
+
+
+    <string name="leftArrowShort">left arrow</string>
+    <string name="leftArrowLong">moves left by one character</string>
+
+    <string name="rightArrowShort">right arrow</string>
+    <string name="rightArrowLong">moves right by one character</string>
+
+    <string name="backspaceShort">backspace</string>
+    <string name="backspaceLong">deletes previous character</string>
+
+    <string name="spaceShort">space</string>
+    <string name="spaceLong">space key, adds space</string>
+
+    <string name="enterShort">enter</string>
+    <string name="enterLong">enter key, adds new line</string>
+
+    <string name="settingsShort">settings</string>
+    <string name="settingsLong">settings key, go to keyboard settings</string>
+
+    <string name="languageShort">english keyboard</string>
+    <string name="languageLong">english keyboard, opens english keyboard</string>
+
+    <string name="voiceTypingLong">Voice typing key, activates voice typing mode</string>
+    <string name="voiceTypingShort">voice typing</string>
+
+    <string name="shiftShort">Shift</string>
+    <string name="shiftLong">Shift key, changes layout with numerals and symbols</string>
+
+
+
+   <string name="a2325">कमळ</string>
     <string name="a2326">खजूर</string>
     <string name="a2327">गणपति</string>
     <string name="a2328">घड्याळ</string>
@@ -197,5 +237,6 @@
     <string name="a2373">बॅट</string>
     <string name="a2321">आॅगस्ट </string>
     <string name="a2377">डॉक्टर</string>
+
 
 </resources>
